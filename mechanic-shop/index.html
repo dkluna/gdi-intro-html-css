@@ -1,0 +1,689 @@
+<title>Bay Ticket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: job board on the left, the open repair order on the right (stacks on phones). */
+:root {
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --sunk: #e3e7ea;
+  --ink: #1b2329;
+  --muted: #5b6770;
+  --line: #cfd5da;
+  --accent: #d2561c;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe6da;
+  --urgent: #b42318;
+  --urgent-soft: #fde4e1;
+  --rec: #a15c00;
+  --rec-soft: #fdf0d5;
+  --mon: #4b5b67;
+  --mon-soft: #e3e8ec;
+  --ok: #1f7a45;
+  --ok-soft: #dcf2e4;
+  --ai: #3949ab;
+  --ai-soft: #e6e9fa;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171b; --panel: #1b2228; --sunk: #232c33; --ink: #e6ebef; --muted: #98a5ae; --line: #33404a;
+    --accent: #f07a3d; --accent-ink: #1a0d05; --accent-soft: #3a2216;
+    --urgent: #ff8a7d; --urgent-soft: #3d1a17; --rec: #f5b54a; --rec-soft: #362710;
+    --mon: #a9b8c3; --mon-soft: #26313a; --ok: #6fd39a; --ok-soft: #15301f; --ai: #a3afff; --ai-soft: #222846;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171b; --panel: #1b2228; --sunk: #232c33; --ink: #e6ebef; --muted: #98a5ae; --line: #33404a;
+  --accent: #f07a3d; --accent-ink: #1a0d05; --accent-soft: #3a2216;
+  --urgent: #ff8a7d; --urgent-soft: #3d1a17; --rec: #f5b54a; --rec-soft: #362710;
+  --mon: #a9b8c3; --mon-soft: #26313a; --ok: #6fd39a; --ok-soft: #15301f; --ai: #a3afff; --ai-soft: #222846;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 3px solid var(--ink); margin-bottom: 18px; }
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.brand h1 { font: 700 30px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; margin: 0; }
+.brand span { color: var(--muted); font-size: 13px; }
+.mode { font: 500 12px var(--mono); padding: 3px 8px; border-radius: 3px; background: var(--sunk); color: var(--muted); }
+.mode.live { background: var(--ok-soft); color: var(--ok); }
+h2, h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: .03em; margin: 0; text-wrap: balance; }
+h2 { font-size: 22px; font-weight: 700; }
+h3 { font-size: 17px; font-weight: 600; }
+.label { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+button, .btn { font: 600 14px var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 12px; border-radius: 4px; cursor: pointer; }
+button:hover { border-color: var(--ink); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.ai { background: var(--ai-soft); color: var(--ai); border-color: transparent; }
+button.ai:hover { border-color: var(--ai); }
+button.small { padding: 3px 8px; font-size: 12px; }
+button.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+button.ghost:hover { color: var(--ink); border-color: var(--line); }
+button:disabled { opacity: .55; cursor: progress; }
+input, select, textarea { font: 14px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; width: 100%; min-width: 0; }
+textarea { resize: vertical; min-height: 64px; }
+.grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* job board */
+.board { display: flex; flex-direction: column; gap: 10px; }
+.board-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ticket { text-align: left; display: grid; gap: 4px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 4px; width: 100%; font-weight: 400; }
+.ticket.sel { border-color: var(--ink); border-left-color: var(--accent); box-shadow: 0 1px 0 var(--ink); }
+.ticket .row1 { display: flex; justify-content: space-between; gap: 8px; font: 500 12px var(--mono); color: var(--muted); }
+.ticket .veh { font: 600 18px/1.15 var(--display); text-transform: uppercase; }
+.ticket .cc { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill { display: inline-block; font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+.st-intake { background: var(--mon-soft); color: var(--mon); }
+.st-diagnosing { background: var(--ai-soft); color: var(--ai); }
+.st-estimate { background: var(--rec-soft); color: var(--rec); }
+.st-approved { background: var(--accent-soft); color: var(--accent); }
+.st-done { background: var(--ok-soft); color: var(--ok); }
+.sev-urgent { background: var(--urgent-soft); color: var(--urgent); }
+.sev-recommended { background: var(--rec-soft); color: var(--rec); }
+.sev-monitor { background: var(--mon-soft); color: var(--mon); }
+
+/* repair order */
+.ro { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+.ro-head { padding: 16px 18px; border-bottom: 1px dashed var(--line); display: grid; gap: 12px; }
+.ro-title { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center; }
+.ro-title .veh { font: 700 28px/1.05 var(--display); text-transform: uppercase; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 12px; }
+.fields label { display: grid; gap: 2px; }
+.tabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; font: 600 16px var(--display); text-transform: uppercase; letter-spacing: .04em; padding: 10px 12px; color: var(--muted); white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs .count { font: 500 12px var(--mono); margin-left: 4px; }
+.pane { padding: 16px 18px; display: grid; gap: 16px; }
+.concern { background: var(--sunk); border-radius: 4px; padding: 10px 12px; display: grid; gap: 6px; }
+.log { display: grid; gap: 0; border-left: 2px solid var(--line); margin-left: 6px; }
+.log-item { position: relative; padding: 0 0 12px 16px; }
+.log-item::before { content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); }
+.log-item .meta { font: 500 12px var(--mono); color: var(--muted); }
+.log-add { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+@media (max-width: 560px) { .log-add { grid-template-columns: minmax(0, 1fr); } }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.note { font-size: 13px; color: var(--muted); }
+.ai-note { font-size: 13px; color: var(--ai); background: var(--ai-soft); padding: 8px 10px; border-radius: 4px; }
+.err { font-size: 13px; color: var(--urgent); background: var(--urgent-soft); padding: 8px 10px; border-radius: 4px; }
+
+/* findings */
+.finding { border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.finding.f-urgent { border-left: 5px solid var(--urgent); }
+.finding.f-recommended { border-left: 5px solid var(--rec); }
+.finding.f-monitor { border-left: 5px solid var(--mon); }
+.f-head { display: grid; grid-template-columns: minmax(0, 1fr) 150px 90px auto; gap: 8px; padding: 10px 12px; align-items: center; background: var(--sunk); }
+@media (max-width: 640px) { .f-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .f-head .f-title { grid-column: 1 / -1; } }
+.f-title { font-weight: 600; }
+.f-body { padding: 10px 12px; display: grid; gap: 10px; }
+.tag-primary { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .05em; color: var(--accent); }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td input { padding: 4px 6px; font-size: 13px; }
+td.r, th.r { text-align: right; }
+.unverified { color: var(--rec); font-size: 12px; white-space: nowrap; }
+.verified { color: var(--ok); font-size: 12px; white-space: nowrap; }
+.research { border: 1px solid var(--ai); border-radius: 4px; padding: 10px 12px; display: grid; gap: 10px; background: color-mix(in srgb, var(--ai-soft) 50%, var(--panel)); }
+.opt-group { display: grid; gap: 6px; }
+.opt { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 80px auto; gap: 8px; align-items: center; font-size: 13px; padding: 6px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; }
+@media (max-width: 560px) { .opt { grid-template-columns: minmax(0, 1fr) auto; } }
+.opt a { color: var(--ai); }
+
+/* estimate */
+.est { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+@media (max-width: 760px) { .est { grid-template-columns: minmax(0, 1fr); } }
+.est-line { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: start; }
+.est-line .sub { font-size: 13px; color: var(--muted); }
+.est-line.declined { opacity: .5; }
+.est-line.declined .amt { text-decoration: line-through; }
+.choice { display: flex; gap: 4px; }
+.choice button[aria-pressed="true"].yes { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+.choice button[aria-pressed="true"].no { background: var(--urgent-soft); color: var(--urgent); border-color: var(--urgent); }
+.totals { background: var(--sunk); border-radius: 4px; padding: 12px 14px; display: grid; gap: 6px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.totals .t { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.totals .grand { border-top: 2px solid var(--ink); padding-top: 8px; margin-top: 4px; font: 700 26px var(--display); }
+.quote { white-space: pre-wrap; font: 12.5px/1.5 var(--mono); background: var(--sunk); padding: 12px; border-radius: 4px; overflow-x: auto; }
+
+/* shop settings */
+.settings { display: grid; gap: 12px; }
+.vendor-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 8px; }
+.empty { padding: 40px 20px; text-align: center; color: var(--muted); display: grid; gap: 10px; justify-items: center; }
+.empty h2 { color: var(--ink); }
+@media (prefers-reduced-motion: no-preference) { .ticket, button { transition: border-color .12s, background .12s; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Bay Ticket</h1>
+      <span>Log the work, list what else the car needs, price it out.</span>
+    </div>
+    <div class="toolbar">
+      <span id="mode" class="mode">Connecting…</span>
+      <button id="btnSettings" class="ghost">Shop settings</button>
+      <button id="btnNew" class="primary">New repair order</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="board" aria-label="Repair orders">
+      <div class="board-head">
+        <h2>Open tickets</h2>
+        <select id="filter" aria-label="Filter by status" style="width:auto">
+          <option value="all">All</option>
+          <option value="intake">Intake</option>
+          <option value="diagnosing">Diagnosing</option>
+          <option value="estimate">Estimate sent</option>
+          <option value="approved">Approved</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div id="list" class="board"></div>
+    </aside>
+    <main id="main" class="ro"></main>
+  </div>
+</div>
+
+<script>
+(() => {
+  const STATUSES = { intake: "Intake", diagnosing: "Diagnosing", estimate: "Estimate sent", approved: "Approved", done: "Done" };
+  const SEV = { urgent: "Urgent / safety", recommended: "Recommended", monitor: "Monitor" };
+  const DEFAULT_SHOP = {
+    name: "Your Shop", laborRate: 145, partsMarkup: 35, taxRate: 8.25, suppliesPct: 5, suppliesCap: 40,
+    vendors: [
+      { name: "O'Reilly Auto Parts", notes: "Pro account, same-day delivery" },
+      { name: "NAPA", notes: "Local store, good on brakes and filters" },
+      { name: "AutoZone Commercial", notes: "Fast delivery, economy lines" },
+      { name: "RockAuto", notes: "Cheapest, 2-4 day shipping" },
+      { name: "Dealer parts counter", notes: "OEM parts, highest price" }
+    ]
+  };
+
+  const S = { db: null, sample: null, jobs: [], shop: structuredClone(DEFAULT_SHOP), sel: null, tab: "log", filter: "all", showSettings: false, research: {}, busy: {}, aiErr: {}, draftMsg: "" };
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const money = n => (Number(n) || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const vehName = v => [v?.year, v?.make, v?.model].filter(Boolean).join(" ") || "New vehicle";
+  const job = () => S.jobs.find(j => j.id === S.sel);
+
+  // ---------- persistence ----------
+  const timers = {};
+  function saveJob(j, delay = 500) {
+    j.updatedAt = Date.now();
+    if (!S.db) return;
+    clearTimeout(timers[j.id]);
+    timers[j.id] = setTimeout(() => {
+      const { id, ...body } = j;
+      S.db.collection("jobs").doc(id).set(JSON.parse(JSON.stringify(body))).catch(e => flash("Couldn't save " + (j.ro || "ticket") + ": " + (e.message || e.code)));
+    }, delay);
+  }
+  function saveShop() {
+    if (!S.db) return;
+    clearTimeout(timers.shop);
+    timers.shop = setTimeout(() => S.db.doc("settings/shop").set(JSON.parse(JSON.stringify(S.shop))).catch(e => flash("Couldn't save settings: " + (e.message || e.code))), 500);
+  }
+  function flash(msg) { S.draftMsg = msg; render(); }
+
+  // ---------- math ----------
+  function lineTotals(f) {
+    const partsCost = (f.parts || []).reduce((a, p) => a + (Number(p.cost) || 0) * (Number(p.qty) || 0), 0);
+    const partsSell = partsCost * (1 + (Number(S.shop.partsMarkup) || 0) / 100);
+    const labor = (Number(f.laborHours) || 0) * (Number(S.shop.laborRate) || 0);
+    return { partsCost, partsSell, labor, total: partsSell + labor };
+  }
+  function jobTotals(j, onlyApproved) {
+    const fs = (j.findings || []).filter(f => onlyApproved ? f.approved !== false : true);
+    let parts = 0, labor = 0, cost = 0;
+    fs.forEach(f => { const t = lineTotals(f); parts += t.partsSell; labor += t.labor; cost += t.partsCost; });
+    const supplies = Math.min(labor * (Number(S.shop.suppliesPct) || 0) / 100, Number(S.shop.suppliesCap) || Infinity);
+    const tax = parts * (Number(S.shop.taxRate) || 0) / 100;
+    return { parts, labor, supplies, tax, total: parts + labor + supplies + tax, cost };
+  }
+
+  // ---------- render ----------
+  function render() {
+    renderList();
+    renderMain();
+  }
+
+  function renderList() {
+    const list = $("#list");
+    const jobs = S.jobs.filter(j => S.filter === "all" || j.status === S.filter).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!S.jobs.length) {
+      list.innerHTML = `<p class="note">No tickets yet. Start one with <b>New repair order</b>.</p>`;
+      return;
+    }
+    if (!jobs.length) { list.innerHTML = `<p class="note">Nothing in this status.</p>`; return; }
+    list.innerHTML = jobs.map(j => {
+      const t = jobTotals(j, true);
+      const open = (j.findings || []).filter(f => !f.primary).length;
+      return `<button class="ticket ${j.id === S.sel && !S.showSettings ? "sel" : ""}" data-open="${esc(j.id)}">
+        <div class="row1"><span>${esc(j.ro)}</span><span class="pill st-${esc(j.status)}">${esc(STATUSES[j.status] || j.status)}</span></div>
+        <div class="veh">${esc(vehName(j.vehicle))}</div>
+        <div class="cc">${esc(j.customer?.name || "No customer")} · ${esc(j.concern || "No concern logged")}</div>
+        <div class="row1"><span>${open} extra finding${open === 1 ? "" : "s"}</span><span class="num">${money(t.total)}</span></div>
+      </button>`;
+    }).join("");
+  }
+
+  function renderMain() {
+    const main = $("#main");
+    if (S.showSettings) { main.innerHTML = settingsHTML(); return; }
+    const j = job();
+    if (!j) {
+      main.innerHTML = `<div class="empty"><h2>No ticket open</h2><p>Pick a ticket on the left, or start a new repair order when a car comes in.</p><button class="primary" data-act="new">New repair order</button></div>`;
+      return;
+    }
+    const nf = (j.findings || []).length;
+    main.innerHTML = `
+      <div class="ro-head">
+        <div class="ro-title">
+          <div><div class="label">${esc(j.ro)} · opened ${new Date(j.createdAt).toLocaleDateString()}</div><div class="veh">${esc(vehName(j.vehicle))}</div></div>
+          <div class="toolbar">
+            <select data-f="status" aria-label="Ticket status" style="width:auto">${Object.entries(STATUSES).map(([k, v]) => `<option value="${k}" ${j.status === k ? "selected" : ""}>${v}</option>`).join("")}</select>
+            <button class="ghost small" data-act="delete-job">Delete</button>
+          </div>
+        </div>
+        <div class="fields">
+          ${fld("Customer", "customer.name", j.customer?.name)}
+          ${fld("Phone", "customer.phone", j.customer?.phone)}
+          ${fld("Year", "vehicle.year", j.vehicle?.year)}
+          ${fld("Make", "vehicle.make", j.vehicle?.make)}
+          ${fld("Model / trim", "vehicle.model", j.vehicle?.model)}
+          ${fld("Engine", "vehicle.engine", j.vehicle?.engine)}
+          ${fld("Mileage", "vehicle.mileage", j.vehicle?.mileage)}
+          ${fld("VIN", "vehicle.vin", j.vehicle?.vin)}
+        </div>
+      </div>
+      <div class="tabs" role="tablist">
+        ${tabBtn("log", "Concern & work log", (j.log || []).length)}
+        ${tabBtn("findings", "Findings & parts", nf)}
+        ${tabBtn("estimate", "Estimate", null)}
+      </div>
+      <div class="pane">${S.tab === "log" ? logHTML(j) : S.tab === "findings" ? findingsHTML(j) : estimateHTML(j)}</div>`;
+  }
+  const fld = (label, path, val) => `<label><span class="label">${label}</span><input id="f-${path.replace(".", "-")}" data-f="${path}" value="${esc(val)}"></label>`;
+  const tabBtn = (k, label, n) => `<button role="tab" aria-selected="${S.tab === k}" data-tab="${k}">${label}${n != null ? `<span class="count">${n}</span>` : ""}</button>`;
+
+  function logHTML(j) {
+    const log = (j.log || []).slice().sort((a, b) => a.at - b.at);
+    return `
+      <div class="concern">
+        <span class="label">Customer concern (why it came in)</span>
+        <textarea id="concern" data-f="concern" rows="2">${esc(j.concern)}</textarea>
+      </div>
+      <div class="toolbar" style="justify-content:space-between">
+        <h3>Work log</h3>
+        ${aiButton("draft", "Turn notes into findings", "Reads the concern and log, then drafts findings with severity and labor hours.")}
+      </div>
+      ${S.aiErr.draft ? `<div class="err">${esc(S.aiErr.draft)}</div>` : ""}
+      ${S.draftMsg ? `<div class="ai-note">${esc(S.draftMsg)}</div>` : ""}
+      <div class="log">
+        ${log.length ? log.map(l => `<div class="log-item"><div class="meta">${new Date(l.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · ${esc(l.tech || "Tech")}</div><div>${esc(l.note)}</div></div>`).join("") : `<p class="note" style="padding-left:16px">No entries yet. Log what was checked, measured and done as you go.</p>`}
+      </div>
+      <form class="log-add" id="logForm">
+        <input id="logTech" placeholder="Tech" value="${esc(S.lastTech || "")}" aria-label="Tech name">
+        <textarea id="logNote" rows="2" placeholder="e.g. Front pads 2mm, rotors scored. Rear 6mm. Upper radiator hose soft and seeping at clamp." aria-label="Log entry"></textarea>
+        <button class="primary" type="submit">Add entry</button>
+      </form>`;
+  }
+
+  function aiButton(key, label, title) {
+    const busy = S.busy[key];
+    if (S.sample === false) return `<span class="note" title="${esc(title)}">AI assist unavailable in this view</span>`;
+    return `<button class="ai" data-ai="${key}" ${busy ? "disabled" : ""} title="${esc(title)}">${busy ? "Thinking…" : "✦ " + label}</button>`;
+  }
+
+  function findingsHTML(j) {
+    const fs = j.findings || [];
+    return `
+      <div class="toolbar" style="justify-content:space-between">
+        <p class="note" style="margin:0">The reason it came in, plus anything else found. Each line gets parts and labor.</p>
+        <button data-act="add-finding">Add finding</button>
+      </div>
+      ${fs.length ? fs.map(f => findingHTML(j, f)).join("") : `<div class="empty"><p>No findings yet. Add them by hand, or use <b>Turn notes into findings</b> on the work log.</p></div>`}`;
+  }
+
+  function findingHTML(j, f) {
+    const t = lineTotals(f);
+    const r = S.research[f.id];
+    const k = "research:" + f.id;
+    return `<div class="finding f-${esc(f.severity)}" data-fid="${esc(f.id)}">
+      <div class="f-head">
+        <div class="f-title">
+          ${f.primary ? `<div class="tag-primary">Customer concern</div>` : ""}
+          <input data-ff="title" value="${esc(f.title)}" aria-label="Finding" placeholder="What's wrong">
+        </div>
+        <select data-ff="severity" aria-label="Severity">${Object.entries(SEV).map(([k2, v]) => `<option value="${k2}" ${f.severity === k2 ? "selected" : ""}>${v}</option>`).join("")}</select>
+        <label style="display:flex;gap:4px;align-items:center"><input data-ff="laborHours" type="number" step="0.1" min="0" value="${esc(f.laborHours)}" aria-label="Labor hours" style="width:64px"><span class="label">hrs</span></label>
+        <button class="ghost small" data-act="del-finding" aria-label="Remove finding">Remove</button>
+      </div>
+      <div class="f-body">
+        <textarea data-ff="notes" rows="2" placeholder="Tech notes for this item">${esc(f.notes)}</textarea>
+        ${(f.parts || []).length ? `<div class="tablewrap"><table>
+          <thead><tr><th>Part</th><th>Brand</th><th>Part #</th><th>Vendor</th><th class="r">Cost</th><th class="r">Qty</th><th>Price</th><th></th></tr></thead>
+          <tbody>${f.parts.map((p, i) => `<tr data-pi="${i}">
+            <td><input data-pf="name" value="${esc(p.name)}" aria-label="Part name"></td>
+            <td><input data-pf="brand" value="${esc(p.brand)}" aria-label="Brand" style="width:100px"></td>
+            <td><input data-pf="partNo" value="${esc(p.partNo)}" aria-label="Part number" class="num" style="width:110px"></td>
+            <td><select data-pf="vendor" aria-label="Vendor" style="width:150px">${vendorOpts(p.vendor)}</select></td>
+            <td class="r"><input data-pf="cost" type="number" step="0.01" min="0" value="${esc(p.cost)}" aria-label="Unit cost" class="num" style="width:84px;text-align:right"></td>
+            <td class="r"><input data-pf="qty" type="number" step="1" min="0" value="${esc(p.qty)}" aria-label="Quantity" class="num" style="width:56px;text-align:right"></td>
+            <td><button class="ghost small" data-act="verify" title="Mark when you've confirmed the price with the vendor">${p.verified ? `<span class="verified">✓ Confirmed</span>` : `<span class="unverified">⚠ Unconfirmed</span>`}</button></td>
+            <td><button class="ghost small" data-act="del-part" aria-label="Remove part">✕</button></td>
+          </tr>`).join("")}</tbody></table></div>` : ""}
+        <div class="toolbar" style="justify-content:space-between">
+          <div class="toolbar">
+            <button class="small" data-act="add-part">Add part</button>
+            ${aiButton(k, "Research parts", "Asks Claude which parts this job needs and what each vendor typically charges.")}
+          </div>
+          <span class="note num">Parts ${money(t.partsSell)} · Labor ${money(t.labor)} · <b>${money(t.total)}</b></span>
+        </div>
+        ${S.aiErr[k] ? `<div class="err">${esc(S.aiErr[k])}</div>` : ""}
+        ${r ? researchHTML(f, r) : ""}
+      </div>
+    </div>`;
+  }
+
+  function vendorOpts(cur) {
+    const names = S.shop.vendors.map(v => v.name);
+    if (cur && !names.includes(cur)) names.push(cur);
+    return `<option value="">—</option>` + names.map(n => `<option ${n === cur ? "selected" : ""}>${esc(n)}</option>`).join("");
+  }
+
+  function researchHTML(f, r) {
+    return `<div class="research">
+      <div class="toolbar" style="justify-content:space-between">
+        <h3 style="color:var(--ai)">Parts research</h3>
+        <button class="ghost small" data-act="close-research">Close</button>
+      </div>
+      <div class="ai-note">These prices are Claude's estimates of typical cost to a shop, not live quotes. Confirm price and fitment with the vendor before the estimate goes out.</div>
+      ${r.laborHours ? `<div class="toolbar"><span class="note">Typical labor: <b class="num">${esc(r.laborHours)} hrs</b>${r.laborNote ? " · " + esc(r.laborNote) : ""}</span>${Number(f.laborHours) !== Number(r.laborHours) ? `<button class="small" data-act="use-labor" data-hrs="${esc(r.laborHours)}">Use ${esc(r.laborHours)} hrs</button>` : ""}</div>` : ""}
+      ${(r.parts || []).map((p, pi) => `<div class="opt-group">
+        <div><b>${esc(p.name)}</b> <span class="note">× ${esc(p.qty || 1)}${p.notes ? " · " + esc(p.notes) : ""}</span></div>
+        ${(p.options || []).map((o, oi) => `<div class="opt">
+          <div><b>${esc(o.vendor)}</b><div class="note">${esc(o.tier || "")}</div></div>
+          <div>${esc(o.brand)} <span class="num note">${esc(o.partNo || "")}</span> · <a href="https://www.google.com/search?q=${encodeURIComponent([o.vendor, o.brand, o.partNo || p.name, vehName(job().vehicle)].join(" "))}" target="_blank" rel="noopener">Look up</a></div>
+          <div class="num r" style="text-align:right">${money(o.price)}</div>
+          <button class="small" data-act="pick" data-pi="${pi}" data-oi="${oi}">Add</button>
+        </div>`).join("")}
+      </div>`).join("")}
+      ${(r.caveats || []).length ? `<div class="note"><b>Check before ordering:</b> ${r.caveats.map(esc).join(" · ")}</div>` : ""}
+    </div>`;
+  }
+
+  function estimateHTML(j) {
+    const fs = j.findings || [];
+    if (!fs.length) return `<div class="empty"><p>Add findings first. The estimate builds itself from them.</p><button data-tab="findings">Go to findings</button></div>`;
+    const t = jobTotals(j, true);
+    const all = jobTotals(j, false);
+    const unconf = fs.flatMap(f => f.parts || []).filter(p => !p.verified).length;
+    const order = { urgent: 0, recommended: 1, monitor: 2 };
+    const sorted = fs.slice().sort((a, b) => (b.primary - a.primary) || (order[a.severity] - order[b.severity]));
+    return `<div class="est">
+      <div>
+        ${unconf ? `<div class="err" style="margin-bottom:10px">${unconf} part price${unconf === 1 ? " is" : "s are"} still unconfirmed with the vendor.</div>` : ""}
+        ${sorted.map(f => {
+          const lt = lineTotals(f);
+          return `<div class="est-line ${f.approved === false ? "declined" : ""}" data-fid="${esc(f.id)}">
+            <span class="pill sev-${esc(f.severity)}">${f.primary ? "Concern" : esc(SEV[f.severity]?.split(" ")[0])}</span>
+            <div><div><b>${esc(f.title || "Untitled")}</b></div>
+              <div class="sub">${(f.parts || []).map(p => `${esc(p.qty)}× ${esc(p.name)}${p.brand ? " (" + esc(p.brand) + ")" : ""}`).join(", ") || "No parts"} · ${esc(f.laborHours || 0)} hrs labor</div>
+              <div class="choice" style="margin-top:6px">
+                <button class="small yes" aria-pressed="${f.approved === true}" data-act="approve" data-v="yes">Approved</button>
+                <button class="small no" aria-pressed="${f.approved === false}" data-act="approve" data-v="no">Declined</button>
+              </div>
+            </div>
+            <div class="amt num">${money(lt.total)}</div>
+          </div>`;
+        }).join("")}
+        <h3 style="margin-top:18px">Customer copy</h3>
+        <p class="note">Plain text you can paste into a text or email.</p>
+        <div class="quote" id="quote">${esc(quoteText(j))}</div>
+        <div class="toolbar" style="margin-top:8px"><button data-act="copy-quote">Copy estimate</button><span id="copyMsg" class="note"></span></div>
+      </div>
+      <div class="totals">
+        <span class="label">Estimate total (approved + pending)</span>
+        <div class="t"><span>Parts</span><span class="num">${money(t.parts)}</span></div>
+        <div class="t"><span>Labor @ ${money(S.shop.laborRate)}/hr</span><span class="num">${money(t.labor)}</span></div>
+        <div class="t"><span>Shop supplies</span><span class="num">${money(t.supplies)}</span></div>
+        <div class="t"><span>Tax on parts (${esc(S.shop.taxRate)}%)</span><span class="num">${money(t.tax)}</span></div>
+        <div class="t grand"><span>Total</span><span class="num">${money(t.total)}</span></div>
+        <div class="t note"><span>Parts cost to shop</span><span class="num">${money(t.cost)}</span></div>
+        <div class="t note"><span>Gross profit on parts</span><span class="num">${money(t.parts - t.cost)}</span></div>
+        ${all.total !== t.total ? `<div class="t note"><span>If all items approved</span><span class="num">${money(all.total)}</span></div>` : ""}
+      </div>
+    </div>`;
+  }
+
+  function quoteText(j) {
+    const lines = [];
+    lines.push(`${S.shop.name} · Estimate ${j.ro}`);
+    lines.push(`${vehName(j.vehicle)}${j.vehicle?.mileage ? " · " + j.vehicle.mileage + " mi" : ""}`);
+    lines.push(`For: ${j.customer?.name || ""}`);
+    lines.push("");
+    const groups = [["What you brought it in for", f => f.primary], ["Urgent / safety", f => !f.primary && f.severity === "urgent"], ["Recommended", f => !f.primary && f.severity === "recommended"], ["Keep an eye on", f => !f.primary && f.severity === "monitor"]];
+    groups.forEach(([h, fn]) => {
+      const fs = (j.findings || []).filter(fn);
+      if (!fs.length) return;
+      lines.push(h.toUpperCase());
+      fs.forEach(f => lines.push(`  ${f.approved === false ? "[declined] " : ""}${f.title}`.padEnd(46) + money(lineTotals(f).total).padStart(12)));
+      lines.push("");
+    });
+    const t = jobTotals(j, true);
+    lines.push("Parts".padEnd(46) + money(t.parts).padStart(12));
+    lines.push("Labor".padEnd(46) + money(t.labor).padStart(12));
+    lines.push("Shop supplies".padEnd(46) + money(t.supplies).padStart(12));
+    lines.push("Tax".padEnd(46) + money(t.tax).padStart(12));
+    lines.push("TOTAL".padEnd(46) + money(t.total).padStart(12));
+    return lines.join("\n");
+  }
+
+  function settingsHTML() {
+    const s = S.shop;
+    return `<div class="pane settings">
+      <div class="toolbar" style="justify-content:space-between"><h2>Shop settings</h2><button data-act="close-settings">Done</button></div>
+      <div class="fields">
+        <label><span class="label">Shop name</span><input id="s-name" data-s="name" value="${esc(s.name)}"></label>
+        <label><span class="label">Labor rate ($/hr)</span><input id="s-rate" data-s="laborRate" type="number" value="${esc(s.laborRate)}"></label>
+        <label><span class="label">Parts markup (%)</span><input id="s-markup" data-s="partsMarkup" type="number" value="${esc(s.partsMarkup)}"></label>
+        <label><span class="label">Sales tax on parts (%)</span><input id="s-tax" data-s="taxRate" type="number" step="0.01" value="${esc(s.taxRate)}"></label>
+        <label><span class="label">Shop supplies (% of labor)</span><input id="s-sup" data-s="suppliesPct" type="number" value="${esc(s.suppliesPct)}"></label>
+        <label><span class="label">Supplies cap ($)</span><input id="s-cap" data-s="suppliesCap" type="number" value="${esc(s.suppliesCap)}"></label>
+      </div>
+      <h3>Vendors</h3>
+      <p class="note" style="margin:0">Parts research only quotes from these vendors. Notes help Claude pick (delivery speed, which lines they carry).</p>
+      ${s.vendors.map((v, i) => `<div class="vendor-row" data-vi="${i}"><input data-v="name" value="${esc(v.name)}" aria-label="Vendor name"><input data-v="notes" value="${esc(v.notes)}" aria-label="Vendor notes"><button class="ghost small" data-act="del-vendor">Remove</button></div>`).join("")}
+      <div><button class="small" data-act="add-vendor">Add vendor</button></div>
+    </div>`;
+  }
+
+  // ---------- AI ----------
+  function aiError(e) {
+    const m = {
+      not_granted: "AI assist needs your permission. Reload and choose Allow to use it.",
+      rate_limited: "Too many requests at once. Wait a minute and try again.",
+      invalid_json: "Claude's answer came back garbled. Try again.",
+      refused: "Claude declined this request.",
+      cancelled: "Stopped."
+    };
+    return m[e?.code] || "Couldn't reach Claude just now. Try again in a moment.";
+  }
+
+  function vehicleBlock(j) {
+    const v = j.vehicle || {};
+    return `Vehicle: ${vehName(v)}${v.engine ? ", engine " + v.engine : ""}${v.mileage ? ", " + v.mileage + " miles" : ""}${v.vin ? ", VIN " + v.vin : ""}`;
+  }
+
+  async function runResearch(fid) {
+    const j = job(); const f = j.findings.find(x => x.id === fid); const k = "research:" + fid;
+    S.busy[k] = true; delete S.aiErr[k]; render();
+    const prompt = `You are a parts counter expert helping an independent auto repair shop price a job.
+${vehicleBlock(j)}
+Repair: ${f.title}
+Tech notes: ${f.notes || "(none)"}
+
+The shop buys from these vendors (use ONLY these vendor names, exactly as written):
+${S.shop.vendors.map(v => "- " + v.name + (v.notes ? " (" + v.notes + ")" : "")).join("\n")}
+
+List the parts this repair normally needs on this vehicle (include gaskets, hardware, fluids that are commonly replaced with it). For each part give 2-3 options across different vendors and quality tiers, with a realistic brand, a plausible part number if you know one (otherwise empty string), and your best estimate of the shop's cost in USD (what the shop pays, not retail list). Also give typical book labor hours for this vehicle.
+Reply with JSON only, in this shape:
+{"laborHours": number, "laborNote": string, "parts": [{"name": string, "qty": number, "notes": string, "options": [{"vendor": string, "brand": string, "partNo": string, "tier": "Economy"|"OE-equivalent"|"Premium"|"OEM", "price": number}]}], "caveats": [string]}
+Caveats should name fitment questions the tech must confirm (e.g. rotor size, production date splits).`;
+    try {
+      S.research[fid] = await S.sample.json(prompt, { modelTier: "default" });
+    } catch (e) { S.aiErr[k] = aiError(e); }
+    S.busy[k] = false; render();
+  }
+
+  async function runDraft() {
+    const j = job();
+    S.busy.draft = true; delete S.aiErr.draft; S.draftMsg = ""; render();
+    const existing = (j.findings || []).map(f => "- " + f.title).join("\n") || "(none)";
+    const prompt = `You help a mechanic turn shop notes into a list of repair findings for an estimate.
+${vehicleBlock(j)}
+Customer concern: ${j.concern || "(none)"}
+Work log:
+${(j.log || []).map(l => "- " + (l.tech || "Tech") + ": " + l.note).join("\n") || "(empty)"}
+
+Findings already on the ticket (do not repeat these):
+${existing}
+
+Return new findings implied by the concern and the log. Mark the one that addresses the customer's concern with "primary": true (only if none of the existing findings already covers it). Severity is "urgent" (safety or will cause damage soon), "recommended" (should be done) or "monitor" (watch it, no work yet). Give typical book labor hours for this vehicle (0 for monitor items). Keep titles short, like a repair order line ("Replace front brake pads and rotors").
+Reply with JSON only: {"findings": [{"title": string, "severity": "urgent"|"recommended"|"monitor", "laborHours": number, "notes": string, "primary": boolean}]}`;
+    try {
+      const out = await S.sample.json(prompt, { modelTier: "default" });
+      const add = (out.findings || []).map(f => ({ id: uid(), title: String(f.title || ""), severity: SEV[f.severity] ? f.severity : "recommended", laborHours: Number(f.laborHours) || 0, notes: String(f.notes || ""), primary: !!f.primary, approved: null, parts: [] }));
+      j.findings = [...(j.findings || []), ...add];
+      if (j.status === "intake") j.status = "diagnosing";
+      saveJob(j, 0);
+      S.draftMsg = add.length ? `Added ${add.length} finding${add.length === 1 ? "" : "s"}. Review them on the Findings tab, then research parts.` : "Nothing new found in the notes.";
+    } catch (e) { S.aiErr.draft = aiError(e); }
+    S.busy.draft = false; render();
+  }
+
+  // ---------- events ----------
+  function setPath(obj, path, val) { const ks = path.split("."); let o = obj; ks.slice(0, -1).forEach(k => o = o[k] = o[k] || {}); o[ks.at(-1)] = val; }
+
+  document.addEventListener("input", e => {
+    const el = e.target;
+    if (el.dataset.s != null) { S.shop[el.dataset.s] = el.type === "number" ? Number(el.value) : el.value; saveShop(); return; }
+    if (el.dataset.v != null) { const i = +el.closest("[data-vi]").dataset.vi; S.shop.vendors[i][el.dataset.v] = el.value; saveShop(); return; }
+    const j = job(); if (!j) return;
+    if (el.dataset.f) { setPath(j, el.dataset.f, el.value); saveJob(j); if (el.dataset.f !== "concern") renderList(); return; }
+    const fEl = el.closest("[data-fid]"); if (!fEl) return;
+    const f = j.findings.find(x => x.id === fEl.dataset.fid);
+    if (el.dataset.ff) { f[el.dataset.ff] = el.type === "number" ? Number(el.value) : el.value; saveJob(j); if (el.dataset.ff === "laborHours") refreshTotals(fEl, f); return; }
+    if (el.dataset.pf) { const p = f.parts[+el.closest("[data-pi]").dataset.pi]; p[el.dataset.pf] = el.type === "number" ? Number(el.value) : el.value; saveJob(j); if (el.dataset.pf === "cost" || el.dataset.pf === "qty") refreshTotals(fEl, f); }
+  });
+  document.addEventListener("change", e => {
+    const el = e.target;
+    if (el.id === "filter") { S.filter = el.value; renderList(); return; }
+    const j = job(); if (!j) return;
+    if (el.dataset.f === "status") { j.status = el.value; saveJob(j, 0); render(); return; }
+    if (el.dataset.ff === "severity" || el.dataset.pf === "vendor") render();
+  });
+  function refreshTotals(fEl, f) {
+    const t = lineTotals(f); const span = fEl.querySelector(".f-body > .toolbar > .note");
+    if (span) span.innerHTML = `Parts ${money(t.partsSell)} · Labor ${money(t.labor)} · <b>${money(t.total)}</b>`;
+    renderList();
+  }
+
+  document.addEventListener("submit", e => {
+    if (e.target.id !== "logForm") return;
+    e.preventDefault();
+    const note = $("#logNote").value.trim(); if (!note) return;
+    const j = job(); S.lastTech = $("#logTech").value.trim();
+    j.log = [...(j.log || []), { at: Date.now(), tech: S.lastTech || "Tech", note }];
+    saveJob(j, 0); render(); $("#logNote")?.focus();
+  });
+
+  document.addEventListener("click", async e => {
+    const b = e.target.closest("button, [data-open]"); if (!b) return;
+    if (b.dataset.open) { S.sel = b.dataset.open; S.showSettings = false; S.draftMsg = ""; render(); return; }
+    if (b.dataset.tab) { S.tab = b.dataset.tab; render(); return; }
+    if (b.dataset.ai === "draft") { runDraft(); return; }
+    if (b.dataset.ai?.startsWith("research:")) { runResearch(b.dataset.ai.slice(9)); return; }
+    const act = b.dataset.act; if (!act && b.id !== "btnNew" && b.id !== "btnSettings") return;
+    if (b.id === "btnSettings") { S.showSettings = true; render(); return; }
+    if (b.id === "btnNew" || act === "new") { newJob(); return; }
+    if (act === "close-settings") { S.showSettings = false; render(); return; }
+    if (act === "add-vendor") { S.shop.vendors.push({ name: "", notes: "" }); saveShop(); render(); return; }
+    if (act === "del-vendor") { S.shop.vendors.splice(+b.closest("[data-vi]").dataset.vi, 1); saveShop(); render(); return; }
+    const j = job(); if (!j) return;
+    if (act === "delete-job") {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "Click again to delete"; return; }
+      S.jobs = S.jobs.filter(x => x.id !== j.id); S.sel = S.jobs[0]?.id || null;
+      if (S.db) S.db.collection("jobs").doc(j.id).delete().catch(() => {});
+      render(); return;
+    }
+    if (act === "add-finding") { j.findings = [...(j.findings || []), { id: uid(), title: "", severity: "recommended", laborHours: 0, notes: "", primary: !(j.findings || []).length, approved: null, parts: [] }]; saveJob(j, 0); render(); return; }
+    if (act === "copy-quote") {
+      const txt = quoteText(j);
+      try { await navigator.clipboard.writeText(txt); $("#copyMsg").textContent = "Copied."; }
+      catch { const r = document.createRange(); r.selectNodeContents($("#quote")); getSelection().removeAllRanges(); getSelection().addRange(r); $("#copyMsg").textContent = "Selected. Press Ctrl+C / ⌘C to copy."; }
+      return;
+    }
+    const fEl = b.closest("[data-fid]"); if (!fEl) return;
+    const f = j.findings.find(x => x.id === fEl.dataset.fid);
+    if (act === "del-finding") { j.findings = j.findings.filter(x => x !== f); delete S.research[f.id]; }
+    else if (act === "add-part") f.parts = [...(f.parts || []), { name: "", brand: "", partNo: "", vendor: "", cost: 0, qty: 1, verified: false }];
+    else if (act === "del-part") f.parts.splice(+b.closest("[data-pi]").dataset.pi, 1);
+    else if (act === "verify") { const p = f.parts[+b.closest("[data-pi]").dataset.pi]; p.verified = !p.verified; }
+    else if (act === "close-research") delete S.research[f.id];
+    else if (act === "use-labor") f.laborHours = Number(b.dataset.hrs);
+    else if (act === "pick") {
+      const rp = S.research[f.id].parts[+b.dataset.pi]; const o = rp.options[+b.dataset.oi];
+      f.parts = [...(f.parts || []), { name: rp.name, brand: o.brand || "", partNo: o.partNo || "", vendor: o.vendor || "", cost: Number(o.price) || 0, qty: Number(rp.qty) || 1, verified: false, source: "ai-estimate" }];
+    }
+    else if (act === "approve") { const v = b.dataset.v === "yes"; f.approved = f.approved === v ? null : v; }
+    else return;
+    saveJob(j, 0); render();
+  });
+
+  function newJob() {
+    const n = 1000 + S.jobs.reduce((m, j) => Math.max(m, parseInt(String(j.ro).replace(/\D/g, "")) - 1000 || 0), 0) + 1;
+    const j = { id: uid(), ro: "RO-" + n, status: "intake", createdAt: Date.now(), customer: { name: "", phone: "" }, vehicle: { year: "", make: "", model: "", engine: "", mileage: "", vin: "" }, concern: "", log: [], findings: [] };
+    S.jobs.push(j); S.sel = j.id; S.tab = "log"; S.showSettings = false;
+    saveJob(j, 0); render(); $("#f-customer-name")?.focus();
+  }
+
+  // ---------- boot ----------
+  render();
+  (async () => {
+    const c = window.claude;
+    const [db, sample] = c ? await Promise.all([c.use("db"), c.use("sample")]) : [null, null];
+    S.sample = sample || false;
+    const mode = $("#mode");
+    if (!db) { mode.textContent = "Demo mode · not saved"; render(); return; }
+    S.db = db; mode.textContent = "Saved for the shop"; mode.classList.add("live");
+    db.doc("settings/shop").onSnapshot(snap => {
+      if (snap.exists && !snap.metadata.hasPendingWrites) { S.shop = { ...structuredClone(DEFAULT_SHOP), ...snap.data() }; S.shop.vendors = structuredClone(S.shop.vendors || []); if (!document.activeElement?.closest(".settings")) render(); }
+    });
+    db.collection("jobs").onSnapshot(snap => {
+      const focusedInMain = document.activeElement && document.activeElement.closest("#main") && document.activeElement.matches("input, textarea");
+      const local = new Map(S.jobs.map(j => [j.id, j]));
+      S.jobs = snap.docs.map(d => {
+        if (d.metadata.hasPendingWrites && local.has(d.id)) return local.get(d.id);
+        if (timers[d.id] && local.has(d.id)) return local.get(d.id);
+        return { id: d.id, ...structuredClone(d.data()) };
+      });
+      // keep tickets created locally that haven't arrived yet
+      local.forEach((j, id) => { if (!S.jobs.some(x => x.id === id) && Date.now() - (j.updatedAt || 0) < 5000) S.jobs.push(j); });
+      if (!S.sel || !S.jobs.some(j => j.id === S.sel)) S.sel = S.jobs.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))[0]?.id || null;
+      if (focusedInMain) renderList(); else render();
+    }, e => { mode.textContent = "Couldn't load tickets"; mode.classList.remove("live"); });
+  })();
+})();
+</script>
