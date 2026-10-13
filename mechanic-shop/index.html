@@ -110,6 +110,19 @@ textarea { resize: vertical; min-height: 64px; }
 .log-item .meta { font: 500 12px var(--mono); color: var(--muted); }
 .log-add { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
 @media (max-width: 560px) { .log-add { grid-template-columns: minmax(0, 1fr); } }
+.capture { border: 2px solid var(--accent); border-radius: 6px; padding: 14px; display: grid; gap: 10px; background: color-mix(in srgb, var(--accent-soft) 45%, var(--panel)); }
+.cap-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.cap-head input { max-width: 180px; }
+.capture textarea { font-size: 17px; line-height: 1.45; min-height: 130px; }
+.mic-hint { margin: 0; font-size: 13px; color: var(--muted); }
+.cap-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cap-actions > * { flex: 1 1 160px; }
+button.big, .btn.big { min-height: 52px; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+.photo-btn { cursor: pointer; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.thumb { position: relative; display: inline-block; }
+.thumb img { width: 84px; height: 84px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); display: block; }
+.thumb button { position: absolute; top: 2px; right: 2px; background: var(--panel); padding: 0 5px; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .note { font-size: 13px; color: var(--muted); }
 .ai-note { font-size: 13px; color: var(--ai); background: var(--ai-soft); padding: 8px 10px; border-radius: 4px; }
@@ -319,6 +332,7 @@ td.r, th.r { text-align: right; }
   function logHTML(j) {
     const log = (j.log || []).slice().sort((a, b) => a.at - b.at);
     return `
+      ${captureHTML(j)}
       <div class="concern">
         <span class="label">Customer concern (why it came in)</span>
         <textarea id="concern" data-f="concern" rows="2">${esc(j.concern)}</textarea>
@@ -330,13 +344,31 @@ td.r, th.r { text-align: right; }
       ${S.aiErr.draft ? `<div class="err">${esc(S.aiErr.draft)}</div>` : ""}
       ${S.draftMsg ? `<div class="ai-note">${esc(S.draftMsg)}</div>` : ""}
       <div class="log">
-        ${log.length ? log.map(l => `<div class="log-item"><div class="meta">${new Date(l.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · ${esc(l.tech || "Tech")}</div><div>${esc(l.note)}</div></div>`).join("") : `<p class="note" style="padding-left:16px">No entries yet. Log what was checked, measured and done as you go.</p>`}
+        ${log.length ? log.map(l => `<div class="log-item"><div class="meta">${new Date(l.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · ${esc(l.tech || "Tech")}${l.photos ? " · 📷 " + l.photos : ""}</div><div>${esc(l.note)}</div></div>`).join("") : `<p class="note" style="padding-left:16px">No entries yet. Log what was checked, measured and done as you go.</p>`}
       </div>
-      <form class="log-add" id="logForm">
-        <input id="logTech" placeholder="Tech" value="${esc(S.lastTech || "")}" aria-label="Tech name">
-        <textarea id="logNote" rows="2" placeholder="e.g. Front pads 2mm, rotors scored. Rear 6mm. Upper radiator hose soft and seeping at clamp." aria-label="Log entry"></textarea>
-        <button class="primary" type="submit">Add entry</button>
-      </form>`;
+`;
+  }
+
+  function captureHTML(j) {
+    const k = "capture";
+    const photos = S.photos || [];
+    return `<form class="capture" id="logForm">
+      <div class="cap-head">
+        <h3>Talk to the ticket</h3>
+        <input id="logTech" placeholder="Your name" value="${esc(S.lastTech || "")}" aria-label="Tech name">
+      </div>
+      <textarea id="logNote" rows="4" placeholder="Tap here, then tap the mic on your keyboard and just talk.\n\n“2017 Accord, ninety-eight thousand miles. Customer says grinding up front when braking. Front pads at two mil, rotors scored, rears at six. Upper rad hose is seeping at the clamp.”" aria-label="What you found">${esc(S.capDraft || "")}</textarea>
+      <p class="mic-hint">🎤 Use the microphone key on your phone or tablet keyboard. Talk the way you'd tell another tech. Claude sorts it into the vehicle info, log and findings.</p>
+      ${photos.length ? `<div class="thumbs">${photos.map((p, i) => `<span class="thumb"><img src="${p.url}" alt="Photo ${i + 1}"><button type="button" class="ghost small" data-act="del-photo" data-i="${i}" aria-label="Remove photo">✕</button></span>`).join("")}</div>` : ""}
+      <div class="cap-actions">
+        ${S.sample && S.imgOK ? `<label class="btn big photo-btn">📷 Photo<input id="photoIn" type="file" accept="image/*" capture="environment" multiple hidden></label>` : ""}
+        <button type="submit" class="big" data-mode="plain">Save note only</button>
+        ${S.sample ? `<button type="submit" class="big primary" data-mode="ai" ${S.busy[k] ? "disabled" : ""}>${S.busy[k] ? "Filling in the ticket…" : "✦ Save & fill in ticket"}</button>` : ""}
+      </div>
+      <p class="note" style="margin:0">Photos: VIN sticker, odometer, worn part, or an old paper ticket. Claude reads the VIN and mileage from them.</p>
+      ${S.aiErr[k] ? `<div class="err">${esc(S.aiErr[k])}</div>` : ""}
+      ${S.capMsg ? `<div class="ai-note">${esc(S.capMsg)}</div>` : ""}
+    </form>`;
   }
 
   function aiButton(key, label, title) {
@@ -603,11 +635,68 @@ Reply with JSON only: {"findings": [{"title": string, "severity": "urgent"|"reco
   document.addEventListener("submit", e => {
     if (e.target.id !== "logForm") return;
     e.preventDefault();
-    const note = $("#logNote").value.trim(); if (!note) return;
-    const j = job(); S.lastTech = $("#logTech").value.trim();
+    const mode = e.submitter?.dataset.mode || "plain";
+    const note = $("#logNote").value.trim();
+    S.lastTech = $("#logTech").value.trim();
+    if (mode === "ai") { runCapture(note); return; }
+    if (!note) return;
+    const j = job();
     j.log = [...(j.log || []), { at: Date.now(), tech: S.lastTech || "Tech", note }];
+    S.capDraft = ""; S.capMsg = "";
     saveJob(j, 0); render(); $("#logNote")?.focus();
   });
+  document.addEventListener("input", e => { if (e.target.id === "logNote") S.capDraft = e.target.value; });
+  document.addEventListener("change", e => {
+    if (e.target.id !== "photoIn") return;
+    const files = [...e.target.files].slice(0, Math.max(0, (S.imgMax || 4) - (S.photos || []).length));
+    S.photos = [...(S.photos || []), ...files.map(f => ({ file: f, url: URL.createObjectURL(f) }))];
+    render();
+  });
+
+  async function runCapture(note) {
+    const j = job(); const k = "capture";
+    const photos = (S.photos || []).map(p => p.file);
+    if (!note && !photos.length) { S.aiErr[k] = "Say or type what you found first, or add a photo."; render(); return; }
+    S.busy[k] = true; delete S.aiErr[k]; S.capMsg = ""; render();
+    const v = j.vehicle || {}, c = j.customer || {};
+    const prompt = `You are the service writer at an auto repair shop. A technician just dictated a note into the repair order using voice-to-text, so expect spelling mistakes, numbers written as words, and shop slang ("two mil" = 2 mm, "rad hose" = radiator hose, "CEL" = check engine light).
+${photos.length ? `They also attached ${photos.length} photo(s): these may show a VIN sticker or plate, an odometer, a license plate, a worn or broken part, or an old handwritten repair ticket. Read any VIN, mileage, and details from them.` : ""}
+
+What the ticket already has:
+Customer: ${c.name || "(blank)"}, phone ${c.phone || "(blank)"}
+Vehicle: year ${v.year || "(blank)"}, make ${v.make || "(blank)"}, model ${v.model || "(blank)"}, engine ${v.engine || "(blank)"}, mileage ${v.mileage || "(blank)"}, VIN ${v.vin || "(blank)"}
+Customer concern: ${j.concern || "(blank)"}
+Existing findings: ${(j.findings || []).map(f => f.title).join("; ") || "(none)"}
+
+Technician's note:
+"""${note || "(no text, photos only)"}"""
+
+Pull out everything you can. Only fill a field when the note or photos actually state it; leave it as an empty string otherwise. If you decode a VIN, you may fill year/make/model from it. "logNote" is the note rewritten as a clean, short shop log entry, keeping every measurement. "findings" are NEW repair items implied by the note that are not already in the existing findings; severity is "urgent" (safety or will cause damage soon), "recommended", or "monitor"; give typical book labor hours for this vehicle (0 for monitor); set "primary": true only for the item that fixes the customer concern, and only if no existing finding covers it.
+Reply with JSON only:
+{"customer":{"name":"","phone":""},"vehicle":{"year":"","make":"","model":"","engine":"","mileage":"","vin":""},"concern":"","logNote":"","findings":[{"title":"","severity":"recommended","laborHours":0,"notes":"","primary":false}]}`;
+    try {
+      const out = await S.sample.json(prompt, { modelTier: "default", cache: false, ...(photos.length ? { images: photos } : {}) });
+      const filled = [];
+      j.customer = j.customer || {}; j.vehicle = j.vehicle || {};
+      for (const [key, val] of Object.entries(out.customer || {})) if (val && !j.customer[key]) { j.customer[key] = String(val); filled.push(key); }
+      for (const [key, val] of Object.entries(out.vehicle || {})) if (val && !j.vehicle[key]) { j.vehicle[key] = String(val); filled.push(key === "vin" ? "VIN" : key); }
+      if (out.concern && !j.concern) { j.concern = String(out.concern); filled.push("concern"); }
+      const logNote = String(out.logNote || note || "").trim();
+      if (logNote) j.log = [...(j.log || []), { at: Date.now(), tech: S.lastTech || "Tech", note: logNote, ...(note && note !== logNote ? { spoken: note } : {}), ...(photos.length ? { photos: photos.length } : {}) }];
+      const add = (out.findings || []).filter(f => f && f.title).map(f => ({ id: uid(), title: String(f.title), severity: SEV[f.severity] ? f.severity : "recommended", laborHours: Number(f.laborHours) || 0, notes: String(f.notes || ""), primary: !!f.primary && !(j.findings || []).some(x => x.primary), approved: null, parts: [] }));
+      j.findings = [...(j.findings || []), ...add];
+      if (j.status === "intake" && add.length) j.status = "diagnosing";
+      saveJob(j, 0);
+      (S.photos || []).forEach(p => URL.revokeObjectURL(p.url));
+      S.photos = []; S.capDraft = "";
+      const parts = [];
+      if (filled.length) parts.push("Filled in " + filled.join(", "));
+      if (logNote) parts.push("logged the note");
+      if (add.length) parts.push(`added ${add.length} finding${add.length === 1 ? "" : "s"} (see Findings & parts)`);
+      S.capMsg = parts.length ? parts.join(" · ") + "." : "Nothing new to add from that.";
+    } catch (e) { S.aiErr[k] = aiError(e); }
+    S.busy[k] = false; render();
+  }
 
   document.addEventListener("click", async e => {
     const b = e.target.closest("button, [data-open]"); if (!b) return;
@@ -656,7 +745,7 @@ Reply with JSON only: {"findings": [{"title": string, "severity": "urgent"|"reco
     const n = 1000 + S.jobs.reduce((m, j) => Math.max(m, parseInt(String(j.ro).replace(/\D/g, "")) - 1000 || 0), 0) + 1;
     const j = { id: uid(), ro: "RO-" + n, status: "intake", createdAt: Date.now(), customer: { name: "", phone: "" }, vehicle: { year: "", make: "", model: "", engine: "", mileage: "", vin: "" }, concern: "", log: [], findings: [] };
     S.jobs.push(j); S.sel = j.id; S.tab = "log"; S.showSettings = false;
-    saveJob(j, 0); render(); $("#f-customer-name")?.focus();
+    saveJob(j, 0); render(); $("#logNote")?.focus();
   }
 
   // ---------- boot ----------
@@ -665,6 +754,7 @@ Reply with JSON only: {"findings": [{"title": string, "severity": "urgent"|"reco
     const c = window.claude;
     const [db, sample] = c ? await Promise.all([c.use("db"), c.use("sample")]) : [null, null];
     S.sample = sample || false;
+    if (sample) { try { const lim = await sample.limits(); S.imgOK = !!lim?.images; S.imgMax = lim?.images?.maxCount || 4; } catch { S.imgOK = false; } }
     const mode = $("#mode");
     if (!db) { mode.textContent = "Demo mode · not saved"; render(); return; }
     S.db = db; mode.textContent = "Saved for the shop"; mode.classList.add("live");
