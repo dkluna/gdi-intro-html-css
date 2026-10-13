@@ -123,6 +123,45 @@ button.big, .btn.big { min-height: 52px; font-size: 16px; display: inline-flex; 
 .thumb { position: relative; display: inline-block; }
 .thumb img { width: 84px; height: 84px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); display: block; }
 .thumb button { position: absolute; top: 2px; right: 2px; background: var(--panel); padding: 0 5px; }
+.cap-pane { border-bottom: 1px dashed var(--line); }
+details.more summary { cursor: pointer; font-size: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.lg { font: 700 12px var(--body); text-transform: uppercase; letter-spacing: .03em; padding: 4px 10px; border-radius: 99px; border: 2px solid; }
+.lg.s-ok { color: var(--ok); border-color: var(--ok); }
+.lg.s-future { color: var(--rec); border-color: var(--rec); }
+.lg.s-now { color: var(--urgent); border-color: var(--urgent); }
+.intake { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 12px; }
+.intake label { display: grid; gap: 2px; }
+.insp-sec { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.band { background: var(--ink); color: var(--bg); text-align: center; padding: 6px; font-size: 18px; }
+.insp-group { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1.4fr); gap: 10px; background: var(--sunk); padding: 4px 10px; font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.insp-group span:last-child { grid-column: 3; }
+.insp-row { display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1.4fr); gap: 10px; align-items: center; padding: 6px 10px; border-top: 1px solid var(--line); border-left: 5px solid transparent; }
+.insp-row.r-ok { border-left-color: var(--ok); }
+.insp-row.r-future { border-left-color: var(--rec); background: color-mix(in srgb, var(--rec-soft) 40%, transparent); }
+.insp-row.r-now { border-left-color: var(--urgent); background: color-mix(in srgb, var(--urgent-soft) 45%, transparent); }
+@media (max-width: 640px) { .insp-row { grid-template-columns: minmax(0, 1fr) auto; } .insp-row .cond { grid-column: 1 / -1; } .insp-group { grid-template-columns: 1fr; } .insp-group span:last-child { display: none; } }
+.insp-name { font-weight: 500; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.insp-name .ctype { width: 110px; padding: 3px 6px; font-size: 13px; }
+.fr { display: inline-flex; gap: 4px; }
+.sb { display: inline-flex; gap: 6px; }
+.sb button { width: 44px; height: 40px; padding: 0; border-width: 2px; font-size: 18px; font-weight: 800; color: transparent; }
+.sb button span { color: inherit; }
+.sb .s-ok { border-color: var(--ok); } .sb .s-future { border-color: var(--rec); } .sb .s-now { border-color: var(--urgent); }
+.sb .s-ok[aria-pressed="true"] { background: var(--ok); color: var(--panel); }
+.sb .s-future[aria-pressed="true"] { background: var(--rec); color: var(--panel); }
+.sb .s-now[aria-pressed="true"] { background: var(--urgent); color: var(--panel); }
+.chip { padding: 3px 9px; font-size: 12px; border-radius: 99px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.big-chip { padding: 10px 16px; font-size: 14px; }
+.oil { display: flex; flex-wrap: wrap; gap: 4px; grid-column: 2 / -1; }
+.tires { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; padding: 10px; }
+.corner { border: 1px solid var(--line); border-top: 5px solid var(--line); border-radius: 4px; padding: 10px; display: grid; gap: 8px; }
+.corner.r-ok { border-top-color: var(--ok); } .corner.r-future { border-top-color: var(--rec); } .corner.r-now { border-top-color: var(--urgent); }
+.tf { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 6px; }
+.tf label { display: grid; gap: 2px; }
+.insp-sec > .toolbar { padding: 10px; }
+.rpt-wrap { border: 1px solid var(--line); border-radius: 4px; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .note { font-size: 13px; color: var(--muted); }
 .ai-note { font-size: 13px; color: var(--ai); background: var(--ai-soft); padding: 8px 10px; border-radius: 4px; }
@@ -212,7 +251,7 @@ td.r, th.r { text-align: right; }
   const STATUSES = { intake: "Intake", diagnosing: "Diagnosing", estimate: "Estimate sent", approved: "Approved", done: "Done" };
   const SEV = { urgent: "Urgent / safety", recommended: "Recommended", monitor: "Monitor" };
   const DEFAULT_SHOP = {
-    name: "Your Shop", laborRate: 145, partsMarkup: 35, taxRate: 8.25, suppliesPct: 5, suppliesCap: 40,
+    name: "Your Shop", address: "", phone: "", laborRate: 145, partsMarkup: 35, taxRate: 8.25, suppliesPct: 5, suppliesCap: 40,
     vendors: [
       { name: "O'Reilly Auto Parts", notes: "Pro account, same-day delivery" },
       { name: "NAPA", notes: "Local store, good on brakes and filters" },
@@ -309,22 +348,37 @@ td.r, th.r { text-align: right; }
           </div>
         </div>
         <div class="fields">
-          ${fld("Customer", "customer.name", j.customer?.name)}
-          ${fld("Phone", "customer.phone", j.customer?.phone)}
           ${fld("Year", "vehicle.year", j.vehicle?.year)}
           ${fld("Make", "vehicle.make", j.vehicle?.make)}
-          ${fld("Model / trim", "vehicle.model", j.vehicle?.model)}
+          ${fld("Model", "vehicle.model", j.vehicle?.model)}
           ${fld("Engine", "vehicle.engine", j.vehicle?.engine)}
+          ${fld("Color", "vehicle.color", j.vehicle?.color)}
           ${fld("Mileage", "vehicle.mileage", j.vehicle?.mileage)}
+          ${fld("Lic #", "vehicle.plate", j.vehicle?.plate)}
           ${fld("VIN", "vehicle.vin", j.vehicle?.vin)}
         </div>
+        <details class="more" ${S.openCust ? "open" : ""}>
+          <summary><span class="label">Customer</span> ${esc(j.customer?.name || "No name yet")}${j.customer?.phone ? " · " + esc(j.customer.phone) : ""}</summary>
+          <div class="fields" style="margin-top:8px">
+            ${fld("Name", "customer.name", j.customer?.name)}
+            ${fld("Phone", "customer.phone", j.customer?.phone)}
+            ${fld("Alt. phone", "customer.altPhone", j.customer?.altPhone)}
+            ${fld("Address", "customer.address", j.customer?.address)}
+            ${fld("City", "customer.city", j.customer?.city)}
+            ${fld("State", "customer.state", j.customer?.state)}
+            ${fld("Zip", "customer.zip", j.customer?.zip)}
+          </div>
+        </details>
       </div>
+      <div class="pane cap-pane">${captureHTML(j)}</div>
       <div class="tabs" role="tablist">
-        ${tabBtn("log", "Concern & work log", (j.log || []).length)}
+        ${tabBtn("log", "Concern & log", (j.log || []).length)}
+        ${tabBtn("inspect", "Inspection", inspCount(j) || null)}
         ${tabBtn("findings", "Findings & parts", nf)}
         ${tabBtn("estimate", "Estimate", null)}
+        ${tabBtn("report", "Report", null)}
       </div>
-      <div class="pane">${S.tab === "log" ? logHTML(j) : S.tab === "findings" ? findingsHTML(j) : estimateHTML(j)}</div>`;
+      <div class="pane">${({ log: logHTML, inspect: inspectionHTML, findings: findingsHTML, estimate: estimateHTML, report: reportHTML })[S.tab](j)}</div>`;
   }
   const fld = (label, path, val) => `<label><span class="label">${label}</span><input id="f-${path.replace(".", "-")}" data-f="${path}" value="${esc(val)}"></label>`;
   const tabBtn = (k, label, n) => `<button role="tab" aria-selected="${S.tab === k}" data-tab="${k}">${label}${n != null ? `<span class="count">${n}</span>` : ""}</button>`;
@@ -332,7 +386,6 @@ td.r, th.r { text-align: right; }
   function logHTML(j) {
     const log = (j.log || []).slice().sort((a, b) => a.at - b.at);
     return `
-      ${captureHTML(j)}
       <div class="concern">
         <span class="label">Customer concern (why it came in)</span>
         <textarea id="concern" data-f="concern" rows="2">${esc(j.concern)}</textarea>
@@ -358,7 +411,7 @@ td.r, th.r { text-align: right; }
         <input id="logTech" placeholder="Your name" value="${esc(S.lastTech || "")}" aria-label="Tech name">
       </div>
       <textarea id="logNote" rows="4" placeholder="Tap here, then tap the mic on your keyboard and just talk.\n\n“2017 Accord, ninety-eight thousand miles. Customer says grinding up front when braking. Front pads at two mil, rotors scored, rears at six. Upper rad hose is seeping at the clamp.”" aria-label="What you found">${esc(S.capDraft || "")}</textarea>
-      <p class="mic-hint">🎤 Use the microphone key on your phone or tablet keyboard. Talk the way you'd tell another tech. Claude sorts it into the vehicle info, log and findings.</p>
+      <p class="mic-hint">🎤 Use the microphone key on your phone or tablet keyboard. Talk the way you'd tell another tech, including the inspection (“battery weak, yellow; left front pads three mil, red”). Claude fills in the vehicle info, inspection, log and findings.</p>
       ${photos.length ? `<div class="thumbs">${photos.map((p, i) => `<span class="thumb"><img src="${p.url}" alt="Photo ${i + 1}"><button type="button" class="ghost small" data-act="del-photo" data-i="${i}" aria-label="Remove photo">✕</button></span>`).join("")}</div>` : ""}
       <div class="cap-actions">
         ${S.sample && S.imgOK ? `<label class="btn big photo-btn">📷 Photo<input id="photoIn" type="file" accept="image/*" capture="environment" multiple hidden></label>` : ""}
@@ -369,6 +422,135 @@ td.r, th.r { text-align: right; }
       ${S.aiErr[k] ? `<div class="err">${esc(S.aiErr[k])}</div>` : ""}
       ${S.capMsg ? `<div class="ai-note">${esc(S.capMsg)}</div>` : ""}
     </form>`;
+  }
+
+  // ---------- inspection (mirrors the shop's paper Comprehensive Vehicle Inspection Report) ----------
+  const INSP = [
+    { sec: "Topside", group: "Components", items: [["lights", "Lights", "fr"], ["wipers", "Wiper Blades", "fr"], ["belts", "Belts & Hoses"], ["battery", "Battery"], ["airFilter", "Engine Air Filter"], ["cabinFilter", "Cabin Air Filter"], ["topOther", "Other"]] },
+    { sec: "Topside", group: "Fluids", items: [["transFluid", "Transmission"], ["oil", "Engine Oil"], ["coolant", "Coolant", "type"], ["psFluid", "Power Steering"], ["brakeFluid", "Brake Fluid"], ["washer", "Washer Fluid"], ["topFluidOther", "Other"]] },
+    { sec: "Bottomside", group: "Components", items: [["drainPlugs", "Drain Plugs"], ["steering", "Steering and Suspension"], ["powertrain", "Power Train"], ["brakes", "Brakes"], ["fuelFilter", "Fuel Filter"], ["exhaust", "Exhaust"]] },
+    { sec: "Bottomside", group: "Fluids", items: [["manualTrans", "Manual Transmission"], ["transferCase", "Transfer Case"], ["rearDiff", "Rear Differential"], ["frontDiff", "Front Differential"], ["grease", "Grease Fittings"], ["service306090", "30/60/90 Service"], ["bottomOther", "Other"]] }
+  ];
+  const INSP_LABEL = Object.fromEntries(INSP.flatMap(g => g.items.map(([k, l]) => [k, l])));
+  const CORNERS = [["LF", "Left Front"], ["RF", "Right Front"], ["LR", "Left Rear"], ["RR", "Right Rear"]];
+  const ST = { ok: "Checked and OK", future: "May require future attention", now: "Requires immediate attention" };
+  const OIL = ["Full", "OK", "Low", "Below low"];
+  const COURT = [["tirePressure", "Set Tire Pressure"], ["sticker", "Install Sticker"], ["other", "Other"]];
+  const insp = j => (j.inspection = j.inspection || { items: {}, tires: {}, courtesies: {}, intake: {} });
+  function inspCount(j) {
+    const i = j.inspection; if (!i) return 0;
+    return Object.values(i.items || {}).filter(x => x.s === "future" || x.s === "now").length + Object.values(i.tires || {}).filter(x => x.s === "future" || x.s === "now").length;
+  }
+  const stBtns = (cur, act, key) => `<div class="sb" role="group">${["ok", "future", "now"].map(s => `<button type="button" class="s-${s}" aria-pressed="${cur === s}" data-act="${act}" data-key="${key}" data-v="${s}" title="${ST[s]}"><span>${s === "ok" ? "✓" : s === "future" ? "!" : "✕"}</span></button>`).join("")}</div>`;
+
+  function inspectionHTML(j) {
+    const I = insp(j);
+    const it = k => I.items[k] || {};
+    const done = Object.values(I.items).filter(x => x.s).length, total = INSP.reduce((a, g) => a + g.items.length, 0);
+    const flagged = inspCount(j), linked = Object.values(I.items).filter(x => (x.s === "future" || x.s === "now") && !x.findingId).length + Object.values(I.tires).filter(x => (x.s === "future" || x.s === "now") && !x.findingId).length;
+    const pf = (p, v, ph = "") => `<input id="f-${p.replace(/\./g, "-")}" data-f="${p}" value="${esc(v)}" placeholder="${ph}">`;
+    return `
+      <div class="legend">
+        <span class="lg s-ok">✓ Checked and OK at this time</span>
+        <span class="lg s-future">! May require future attention</span>
+        <span class="lg s-now">✕ Requires immediate attention</span>
+      </div>
+      <div class="intake">
+        <label><span class="label">Received</span>${`<input type="datetime-local" id="f-insp-received" data-f="inspection.intake.received" value="${esc(I.intake.received)}">`}</label>
+        <label><span class="label">Promised</span><input type="datetime-local" id="f-insp-promised" data-f="inspection.intake.promised" value="${esc(I.intake.promised)}"></label>
+        <label><span class="label">Call when ready?</span><select id="f-insp-call" data-f="inspection.intake.callWhenReady"><option value=""></option><option ${I.intake.callWhenReady === "Yes" ? "selected" : ""}>Yes</option><option ${I.intake.callWhenReady === "No" ? "selected" : ""}>No</option></select></label>
+        <label><span class="label">Customer notified</span><input type="datetime-local" id="f-insp-notified" data-f="inspection.intake.notified" value="${esc(I.intake.notified)}"></label>
+        <label><span class="label">Technician</span>${pf("inspection.tech", I.tech ?? S.lastTech ?? "")}</label>
+      </div>
+      <div class="toolbar" style="justify-content:space-between">
+        <span class="note">${done} of ${total} items checked · ${flagged} flagged. Tap the colors, or just say it in the box above (“battery tested weak, yellow”).</span>
+        ${linked ? `<button class="primary" data-act="insp-to-findings">Add ${linked} flagged item${linked === 1 ? "" : "s"} to estimate</button>` : ""}
+      </div>
+      ${["Topside", "Bottomside"].map(sec => `<section class="insp-sec">
+        <h3 class="band">${sec}</h3>
+        ${INSP.filter(g => g.sec === sec).map(g => `
+          <div class="insp-group"><span>${g.group}</span><span>Condition</span></div>
+          ${g.items.map(([k, label, extra]) => `<div class="insp-row r-${esc(it(k).s || "none")}">
+            <div class="insp-name">${label}${extra === "fr" ? `<span class="fr">${["Front", "Rear"].map(w => `<button type="button" class="chip" aria-pressed="${(it(k).where || []).includes(w)}" data-act="insp-where" data-key="${k}" data-v="${w}">${w}</button>`).join("")}</span>` : ""}${extra === "type" ? `<input class="ctype" placeholder="Type" data-f="inspection.items.${k}.type" id="f-insp-${k}-type" value="${esc(it(k).type)}">` : ""}</div>
+            ${stBtns(it(k).s, "insp", k)}
+            <input class="cond" id="f-insp-${k}" data-f="inspection.items.${k}.c" value="${esc(it(k).c)}" placeholder="Condition" aria-label="${label} condition">
+          </div>`).join("")}
+          ${sec === "Topside" && g.group === "Fluids" ? `<div class="insp-row"><div class="insp-name">Oil level</div><div class="oil">${OIL.map(o => `<button type="button" class="chip" aria-pressed="${I.oilLevel === o}" data-act="oil" data-v="${o}">${o}</button>`).join("")}</div></div>` : ""}
+        `).join("")}
+      </section>`).join("")}
+      <section class="insp-sec">
+        <h3 class="band">Tires &amp; brakes</h3>
+        <div class="tires">
+          ${CORNERS.map(([c, name]) => { const t = I.tires[c] || {}; return `<div class="corner r-${esc(t.s || "none")}">
+            <div class="toolbar" style="justify-content:space-between"><b>${name}</b>${stBtns(t.s, "tire", c)}</div>
+            <div class="tf">
+              <label><span class="label">Tread wear</span>${pf(`inspection.tires.${c}.wear`, t.wear, "even")}</label>
+              <label><span class="label">Tread depth</span>${pf(`inspection.tires.${c}.depth`, t.depth, "/32")}</label>
+              <label><span class="label">Pressure</span>${pf(`inspection.tires.${c}.psi`, t.psi, "psi")}</label>
+              <label><span class="label">Pads outer</span>${pf(`inspection.tires.${c}.padOut`, t.padOut, "mm")}</label>
+              <label><span class="label">Pads inner</span>${pf(`inspection.tires.${c}.padIn`, t.padIn, "mm")}</label>
+            </div>
+          </div>`; }).join("")}
+        </div>
+      </section>
+      <section class="insp-sec">
+        <h3 class="band">Courtesies</h3>
+        <div class="toolbar">${COURT.map(([k, l]) => `<button type="button" class="chip big-chip" aria-pressed="${!!I.courtesies[k]}" data-act="court" data-v="${k}">${I.courtesies[k] ? "✓ " : ""}${l}</button>`).join("")}</div>
+      </section>`;
+  }
+
+  function inspToFindings(j) {
+    const I = insp(j); let n = 0;
+    const mk = (title, s, notes) => { const f = { id: uid(), title, severity: s === "now" ? "urgent" : "recommended", laborHours: 0, notes: notes || "", primary: false, approved: null, parts: [] }; j.findings = [...(j.findings || []), f]; n++; return f.id; };
+    for (const [k, v] of Object.entries(I.items)) if ((v.s === "future" || v.s === "now") && !v.findingId) v.findingId = mk(INSP_LABEL[k] + (v.c ? ": " + v.c : ""), v.s, "From inspection");
+    for (const [c, name] of CORNERS) { const t = I.tires[c]; if (t && (t.s === "future" || t.s === "now") && !t.findingId) t.findingId = mk(`${name} tire/brakes` + ([t.depth && "tread " + t.depth + "/32", t.padIn && "pads " + t.padIn + "mm"].filter(Boolean).length ? ": " + [t.depth && "tread " + t.depth + "/32", t.padIn && "pads " + t.padIn + "mm"].filter(Boolean).join(", ") : ""), t.s, "From inspection"); }
+    return n;
+  }
+
+  // ---------- report (customer copy, laid out like the paper form) ----------
+  function reportBody(j) {
+    const I = insp(j), sh = S.shop, c = j.customer || {}, v = j.vehicle || {};
+    const dot = s => `<span class="dot d-${s || "none"}">${s === "ok" ? "✓" : s === "future" ? "!" : s === "now" ? "✕" : ""}</span>`;
+    const dt = x => x ? new Date(x).toLocaleString([], { month: "numeric", day: "numeric", year: "2-digit", hour: "numeric", minute: "2-digit" }) : "";
+    const declined = (j.findings || []).filter(f => f.approved === false);
+    return `<div class="rpt">
+      <div class="rpt-top">
+        <div><div class="rpt-shop">${esc(sh.name)}</div><div>${esc(sh.address || "")}</div><div>${esc(sh.phone || "")}</div></div>
+        <div class="rpt-title">Comprehensive Vehicle Inspection Report</div>
+        <table class="rpt-box"><tr><td>Received<br><b>${esc(dt(I.intake.received))}</b></td><td>Promised<br><b>${esc(dt(I.intake.promised))}</b></td></tr><tr><td>Call when ready? <b>${esc(I.intake.callWhenReady || "")}</b></td><td>Customer notified<br><b>${esc(dt(I.intake.notified))}</b></td></tr></table>
+      </div>
+      <div class="rpt-two">
+        <div class="rpt-cust"><b>Customer</b><br>${esc(c.name || "")}<br>${esc(c.address || "")}<br>${esc([c.city, c.state, c.zip].filter(Boolean).join(", "))}<br>${esc(c.phone || "")}${c.altPhone ? " · alt " + esc(c.altPhone) : ""}</div>
+        <div>Year <b>${esc(v.year || "")}</b> · Make <b>${esc(v.make || "")}</b> · Model <b>${esc(v.model || "")}</b><br>Color <b>${esc(v.color || "")}</b> · Mileage <b>${esc(v.mileage || "")}</b> · Lic # <b>${esc(v.plate || "")}</b><br>VIN <b class="mono">${esc(v.vin || "")}</b><br>RO# <b>${esc(j.ro)}</b> · Technician <b>${esc(I.tech || "")}</b></div>
+      </div>
+      <div class="rpt-legend">${dot("ok")} Checked and OK at this time ${dot("future")} May require future attention ${dot("now")} Requires immediate attention</div>
+      <div class="rpt-two">
+        <div>${["Topside", "Bottomside"].map(sec => `<div class="rpt-band">${sec}</div>${INSP.filter(g => g.sec === sec).map(g => `<table class="rpt-tbl"><tr><th>${g.group}</th><th></th><th>Condition</th></tr>${g.items.map(([k, l, ex]) => { const x = I.items[k] || {}; return `<tr><td>${l}${ex === "fr" && x.where?.length ? " (" + x.where.join("/") + ")" : ""}${ex === "type" && x.type ? " (" + esc(x.type) + ")" : ""}</td><td>${dot(x.s)}</td><td>${esc(x.c || "")}</td></tr>`; }).join("")}${sec === "Topside" && g.group === "Fluids" ? `<tr><td>Oil level</td><td></td><td>${esc(I.oilLevel || "")}</td></tr>` : ""}</table>`).join("")}`).join("")}
+          <div class="rpt-band">Courtesies</div><table class="rpt-tbl">${COURT.map(([k, l]) => `<tr><td>${l}</td><td>${I.courtesies[k] ? "✓" : ""}</td><td></td></tr>`).join("")}</table>
+        </div>
+        <div>
+          <div class="rpt-band">Notes / comments</div>
+          <div class="rpt-notes">${j.concern ? `<p><b>Concern:</b> ${esc(j.concern)}</p>` : ""}${(j.log || []).map(l => `<p>${esc(l.note)}</p>`).join("")}</div>
+          <div class="rpt-band">Tires &amp; brakes</div>
+          <div class="rpt-tires">${CORNERS.map(([cn, name]) => { const t = I.tires[cn] || {}; return `<div><b>${name}</b> ${dot(t.s)}<br>Tread wear: ${esc(t.wear || "")}<br>Tread depth: ${esc(t.depth || "")}${t.depth ? "/32" : ""}<br>Tire pressure: ${esc(t.psi || "")}${t.psi ? " psi" : ""}<br>Brake pads: outer ${esc(t.padOut || "")} · inner ${esc(t.padIn || "")}</div>`; }).join("")}</div>
+          ${declined.length ? `<div class="rpt-band">Declined by customer</div><ul>${declined.map(f => `<li>${esc(f.title)}</li>`).join("")}</ul>` : ""}
+        </div>
+      </div>
+      <p class="rpt-fine">I hereby authorize the above inspection to be done and grant you and/or your employees permission to operate the vehicle herein described for the purpose of testing and/or inspection. You will not be held responsible for loss or damage to the vehicle or articles left in vehicle in case of fire, theft, or any other cause beyond your control.</p>
+      <div class="rpt-sign"><span>Customer ____________________</span><span>Service Advisor ____________________</span></div>
+      <div class="rpt-sign"><span>Signature ______________________________</span><span>Date __________</span></div>
+      <p class="rpt-fine">By signing here, I am declining the above listed items, some of which may be safety related.</p>
+    </div>`;
+  }
+  const RPT_CSS = `.rpt{font:13px/1.4 Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:18px;max-width:960px}.rpt b{font-weight:700}.rpt .mono{font-family:ui-monospace,Menlo,monospace;letter-spacing:.08em}.rpt-top{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:start}.rpt-shop{font-weight:800;font-size:20px;text-transform:uppercase}.rpt-title{font:italic 800 20px/1.1 Arial,sans-serif;text-transform:uppercase}.rpt-box{border-collapse:collapse;font-size:11px}.rpt-box td{border:1px solid #333;padding:3px 6px}.rpt-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}.rpt-cust{border:1px solid #333;border-radius:8px;padding:8px}.rpt-legend{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-weight:700;font-size:12px}.rpt-band{background:#333;color:#fff;font-weight:800;text-transform:uppercase;text-align:center;padding:3px;margin-top:10px}.rpt-tbl{width:100%;border-collapse:collapse}.rpt-tbl th{background:#ddd;text-align:left;padding:2px 6px;font-size:12px}.rpt-tbl td{border-bottom:1px solid #999;padding:2px 6px}.rpt-tbl td:nth-child(2){width:26px;text-align:center}.dot{display:inline-flex;width:18px;height:18px;border-radius:3px;border:2px solid #999;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;vertical-align:middle}.d-ok{background:#1f8a3b;border-color:#1f8a3b}.d-future{background:#e8c400;border-color:#e8c400;color:#111}.d-now{background:#d62828;border-color:#d62828}.rpt-notes{border:1px solid #999;min-height:120px;padding:6px 8px}.rpt-notes p{margin:0 0 4px;border-bottom:1px solid #ccc}.rpt-tires{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}.rpt-fine{font-size:11px;margin:12px 0 4px}.rpt-sign{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-top:14px}@media(max-width:640px){.rpt-top,.rpt-two{grid-template-columns:1fr}}`;
+
+  function reportHTML(j) {
+    return `<div class="toolbar" style="justify-content:space-between">
+        <p class="note" style="margin:0">Your inspection form, filled in from this ticket. Save it to print or text it to the customer.</p>
+        ${S.downloads ? `<button class="primary" data-act="save-report">Save report</button>` : ""}
+      </div>
+      <span id="rptMsg" class="note"></span>
+      <div class="tablewrap rpt-wrap">${reportBody(j)}</div>`;
   }
 
   function aiButton(key, label, title) {
@@ -528,6 +710,8 @@ td.r, th.r { text-align: right; }
       <div class="toolbar" style="justify-content:space-between"><h2>Shop settings</h2><button data-act="close-settings">Done</button></div>
       <div class="fields">
         <label><span class="label">Shop name</span><input id="s-name" data-s="name" value="${esc(s.name)}"></label>
+        <label><span class="label">Address</span><input id="s-addr" data-s="address" value="${esc(s.address)}"></label>
+        <label><span class="label">Phone</span><input id="s-phone" data-s="phone" value="${esc(s.phone)}"></label>
         <label><span class="label">Labor rate ($/hr)</span><input id="s-rate" data-s="laborRate" type="number" value="${esc(s.laborRate)}"></label>
         <label><span class="label">Parts markup (%)</span><input id="s-markup" data-s="partsMarkup" type="number" value="${esc(s.partsMarkup)}"></label>
         <label><span class="label">Sales tax on parts (%)</span><input id="s-tax" data-s="taxRate" type="number" step="0.01" value="${esc(s.taxRate)}"></label>
@@ -671,9 +855,12 @@ Existing findings: ${(j.findings || []).map(f => f.title).join("; ") || "(none)"
 Technician's note:
 """${note || "(no text, photos only)"}"""
 
-Pull out everything you can. Only fill a field when the note or photos actually state it; leave it as an empty string otherwise. If you decode a VIN, you may fill year/make/model from it. "logNote" is the note rewritten as a clean, short shop log entry, keeping every measurement. "findings" are NEW repair items implied by the note that are not already in the existing findings; severity is "urgent" (safety or will cause damage soon), "recommended", or "monitor"; give typical book labor hours for this vehicle (0 for monitor); set "primary": true only for the item that fixes the customer concern, and only if no existing finding covers it.
+The shop also fills out a multi-point inspection. Checklist keys: ${INSP.flatMap(g => g.items.map(([k2, l]) => k2 + " (" + g.sec + " " + l + ")")).join(", ")}. Tire corners: LF, RF, LR, RR, each with wear (pattern, e.g. "even", "inner edge"), depth (32nds, number only), psi, padOut and padIn (brake pad mm, number only). Status per item or corner: "ok" (checked and OK / green), "future" (may require future attention / yellow), "now" (requires immediate attention / red). Map what the tech says to these: "green/good/fine" = ok, "yellow/getting low/keep an eye on" = future, "red/bad/needs it now/metal to metal" = now. Include only items the tech actually mentions. oilLevel is one of "Full", "OK", "Low", "Below low" or "".
+
+Pull out everything you can. Only fill a field when the note or photos actually state it; leave it as an empty string otherwise. If you decode a VIN, you may fill year/make/model from it. "logNote" is the note rewritten as a clean, short shop log entry, keeping every measurement. "findings" are NEW repair items implied by the note that are not already in the existing findings; severity is "urgent" (safety or will cause damage soon), "recommended", or "monitor"; give typical book labor hours for this vehicle (0 for monitor); set "primary": true only for the item that fixes the customer concern, and only if no existing finding covers it; set "inspectionKey" to the checklist key (or tire corner) the finding comes from, or "".
 Reply with JSON only:
-{"customer":{"name":"","phone":""},"vehicle":{"year":"","make":"","model":"","engine":"","mileage":"","vin":""},"concern":"","logNote":"","findings":[{"title":"","severity":"recommended","laborHours":0,"notes":"","primary":false}]}`;
+{"customer":{"name":"","phone":"","altPhone":"","address":"","city":"","state":"","zip":""},"vehicle":{"year":"","make":"","model":"","engine":"","color":"","mileage":"","plate":"","vin":""},"concern":"","logNote":"","inspection":{"items":{"battery":{"s":"future","c":"tested 380 CCA of 500"}},"tires":{"LF":{"s":"ok","depth":7,"psi":32,"padOut":6,"padIn":6,"wear":"even"}},"oilLevel":""},"findings":[{"title":"","severity":"recommended","laborHours":0,"notes":"","primary":false,"inspectionKey":""}]}
+(The inspection values above only show the shape; fill them from the note.)`;
     try {
       const out = await S.sample.json(prompt, { modelTier: "default", cache: false, ...(photos.length ? { images: photos } : {}) });
       const filled = [];
@@ -683,7 +870,24 @@ Reply with JSON only:
       if (out.concern && !j.concern) { j.concern = String(out.concern); filled.push("concern"); }
       const logNote = String(out.logNote || note || "").trim();
       if (logNote) j.log = [...(j.log || []), { at: Date.now(), tech: S.lastTech || "Tech", note: logNote, ...(note && note !== logNote ? { spoken: note } : {}), ...(photos.length ? { photos: photos.length } : {}) }];
-      const add = (out.findings || []).filter(f => f && f.title).map(f => ({ id: uid(), title: String(f.title), severity: SEV[f.severity] ? f.severity : "recommended", laborHours: Number(f.laborHours) || 0, notes: String(f.notes || ""), primary: !!f.primary && !(j.findings || []).some(x => x.primary), approved: null, parts: [] }));
+      const I = insp(j); let inspN = 0;
+      const okS = s => ["ok", "future", "now"].includes(s) ? s : undefined;
+      for (const [key, val] of Object.entries(out.inspection?.items || {})) {
+        if (!INSP_LABEL[key] || !val) continue;
+        const x = I.items[key] = I.items[key] || {};
+        if (okS(val.s)) x.s = val.s; if (val.c) x.c = String(val.c); if (val.type) x.type = String(val.type); inspN++;
+      }
+      for (const [cn, val] of Object.entries(out.inspection?.tires || {})) {
+        if (!CORNERS.some(([c2]) => c2 === cn) || !val) continue;
+        const t = I.tires[cn] = I.tires[cn] || {};
+        if (okS(val.s)) t.s = val.s;
+        for (const fk of ["wear", "depth", "psi", "padOut", "padIn"]) if (val[fk] !== undefined && val[fk] !== "" && val[fk] !== null) t[fk] = String(val[fk]);
+        inspN++;
+      }
+      if (OIL.includes(out.inspection?.oilLevel)) { I.oilLevel = out.inspection.oilLevel; inspN++; }
+      if (!I.tech && S.lastTech) I.tech = S.lastTech;
+      const add = (out.findings || []).filter(f => f && f.title).map(f => ({ id: uid(), title: String(f.title), severity: SEV[f.severity] ? f.severity : "recommended", laborHours: Number(f.laborHours) || 0, notes: String(f.notes || ""), primary: !!f.primary && !(j.findings || []).some(x => x.primary), approved: null, parts: [], ik: f.inspectionKey || "" }));
+      add.forEach(f => { const tgt = I.items[f.ik] || I.tires[f.ik]; if (tgt && !tgt.findingId) tgt.findingId = f.id; delete f.ik; });
       j.findings = [...(j.findings || []), ...add];
       if (j.status === "intake" && add.length) j.status = "diagnosing";
       saveJob(j, 0);
@@ -692,6 +896,7 @@ Reply with JSON only:
       const parts = [];
       if (filled.length) parts.push("Filled in " + filled.join(", "));
       if (logNote) parts.push("logged the note");
+      if (inspN) parts.push(`updated ${inspN} inspection item${inspN === 1 ? "" : "s"}`);
       if (add.length) parts.push(`added ${add.length} finding${add.length === 1 ? "" : "s"} (see Findings & parts)`);
       S.capMsg = parts.length ? parts.join(" · ") + "." : "Nothing new to add from that.";
     } catch (e) { S.aiErr[k] = aiError(e); }
@@ -724,6 +929,25 @@ Reply with JSON only:
       catch { const r = document.createRange(); r.selectNodeContents($("#quote")); getSelection().removeAllRanges(); getSelection().addRange(r); $("#copyMsg").textContent = "Selected. Press Ctrl+C / ⌘C to copy."; }
       return;
     }
+    if (act === "del-photo") { const [p] = S.photos.splice(+b.dataset.i, 1); URL.revokeObjectURL(p.url); render(); return; }
+    if (["insp", "insp-where", "oil", "tire", "court", "insp-to-findings"].includes(act)) {
+      const I = insp(j), k = b.dataset.key, v = b.dataset.v;
+      if (act === "insp") { const x = I.items[k] = I.items[k] || {}; x.s = x.s === v ? null : v; }
+      if (act === "insp-where") { const x = I.items[k] = I.items[k] || {}; const w = new Set(x.where || []); w.has(v) ? w.delete(v) : w.add(v); x.where = [...w]; }
+      if (act === "tire") { const t = I.tires[k] = I.tires[k] || {}; t.s = t.s === v ? null : v; }
+      if (act === "oil") I.oilLevel = I.oilLevel === v ? null : v;
+      if (act === "court") I.courtesies[v] = !I.courtesies[v];
+      if (act === "insp-to-findings") { const n = inspToFindings(j); S.draftMsg = `Added ${n} item${n === 1 ? "" : "s"} to Findings & parts. Research parts there to price them.`; S.tab = "findings"; }
+      if (!I.tech && S.lastTech) I.tech = S.lastTech;
+      saveJob(j, 0); render(); return;
+    }
+    if (act === "save-report") {
+      const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(j.ro)} Inspection</title><style>body{margin:0;background:#fff}${RPT_CSS}@media print{.rpt{padding:0}}</style></head><body>${reportBody(j)}</body></html>`;
+      const msg = $("#rptMsg");
+      try { await S.downloads.save({ filename: `${j.ro}-inspection.html`, data: html }); msg.textContent = "Saved. Open the file and print it from your browser."; }
+      catch (e) { msg.textContent = e?.code === "declined" ? "" : "Couldn't save the report: " + (e?.message || e?.code); }
+      return;
+    }
     const fEl = b.closest("[data-fid]"); if (!fEl) return;
     const f = j.findings.find(x => x.id === fEl.dataset.fid);
     if (act === "del-finding") { j.findings = j.findings.filter(x => x !== f); delete S.research[f.id]; }
@@ -754,6 +978,8 @@ Reply with JSON only:
     const c = window.claude;
     const [db, sample] = c ? await Promise.all([c.use("db"), c.use("sample")]) : [null, null];
     S.sample = sample || false;
+    try { const st = document.createElement("style"); st.textContent = RPT_CSS; document.head.appendChild(st); } catch {}
+    c?.use("downloads").then(d => { S.downloads = d; if (d && S.tab === "report") render(); });
     if (sample) { try { const lim = await sample.limits(); S.imgOK = !!lim?.images; S.imgMax = lim?.images?.maxCount || 4; } catch { S.imgOK = false; } }
     const mode = $("#mode");
     if (!db) { mode.textContent = "Demo mode · not saved"; render(); return; }
