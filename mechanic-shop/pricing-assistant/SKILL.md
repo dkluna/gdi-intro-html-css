@@ -26,7 +26,7 @@ Your job is to get the parts list **right the first time**: the right variant, t
 
 ```
 price_matrix:
-  method: margin            # CONFIRM WITH OWNER: "margin" or "markup" (see Step 6)
+  method: margin            # confirmed by the owner: margin %, not markup
   tiers:
     - cost_up_to: 250.00    # unit cost in USD
       percent: 50
@@ -128,10 +128,11 @@ For each part:
 
 1. **Unit cost** is the Worldpac cost on screen for the chosen variant. Include any core charge as a separate line, and note it.
 2. Pick the tier by unit cost: up to $250 → 50%; above $250 → 31%.
-3. Apply the matrix using `price_matrix.method` from the settings:
-   - **If margin:** customer unit price = cost ÷ (1 − percent). Example: $100 cost at 50% → **$200.00**; $300 cost at 31% → **$434.78**.
-   - **If markup:** customer unit price = cost × (1 + percent). Example: $100 cost at 50% → **$150.00**; $300 cost at 31% → **$393.00**.
-   - **Until the owner confirms which one, show both prices** and label them, so nobody quotes the wrong one.
+3. Apply the matrix as **margin** (confirmed by the owner): customer unit price = cost ÷ (1 − margin).
+   - $100 cost at 50% → **$200.00**
+   - $300 cost at 31% → **$434.78**
+   - Don't use markup (cost × 1.5). It under-prices every part.
+   - **Near the $250 break, flag the line.** A part costing $250.00 prices at $500.00, but one costing $251.00 prices at $363.77. If two options sit on either side of the break, point out the difference so the pricer or owner can decide.
 4. Round to the cent. Line total = customer unit price × units the customer is charged for.
 5. **Labor:** write "Labor: from Mitchell". Note anything that may add time (rust, seized bolts, previous repairs) so the pricer can adjust, as the owner does case by case. Note overlap when two lines share labor (e.g. both front axles, or pads and rotors on the same axle).
 
@@ -174,7 +175,7 @@ LABOR
 QUESTIONS FOR THE TECH (Spanish / English)
 1. ...
 
-* Price shown as margin AND markup until the owner confirms the method.
+* Customer price uses the shop's margin matrix (50% up to $250 unit cost, 31% above).
 ```
 
 "Fit" is either **Fit confirmed** (and why) or **Needs check** (and the question that settles it).

@@ -251,7 +251,7 @@ td.r, th.r { text-align: right; }
   const STATUSES = { intake: "Intake", diagnosing: "Diagnosing", estimate: "Estimate sent", approved: "Approved", done: "Done" };
   const SEV = { urgent: "Urgent / safety", recommended: "Recommended", monitor: "Monitor" };
   const DEFAULT_SHOP = {
-    name: "Your Shop", address: "", phone: "", laborRate: 145, partsMarkup: 35, taxRate: 8.25, suppliesPct: 5, suppliesCap: 40,
+    name: "Your Shop", address: "", phone: "", laborRate: 145, marginLow: 50, marginHigh: 31, marginBreak: 250, taxRate: 8.25, suppliesPct: 5, suppliesCap: 40,
     vendors: [
       { name: "O'Reilly Auto Parts", notes: "Pro account, same-day delivery" },
       { name: "NAPA", notes: "Local store, good on brakes and filters" },
@@ -288,9 +288,15 @@ td.r, th.r { text-align: right; }
   function flash(msg) { S.draftMsg = msg; render(); }
 
   // ---------- math ----------
+  // Shop price matrix: margin %, tiered by unit cost (price = cost / (1 - margin))
+  function partPrice(cost) {
+    const c = Number(cost) || 0;
+    const m = (c <= (Number(S.shop.marginBreak) || 250) ? Number(S.shop.marginLow) : Number(S.shop.marginHigh)) || 0;
+    return m >= 100 ? c : c / (1 - m / 100);
+  }
   function lineTotals(f) {
     const partsCost = (f.parts || []).reduce((a, p) => a + (Number(p.cost) || 0) * (Number(p.qty) || 0), 0);
-    const partsSell = partsCost * (1 + (Number(S.shop.partsMarkup) || 0) / 100);
+    const partsSell = (f.parts || []).reduce((a, p) => a + partPrice(p.cost) * (Number(p.qty) || 0), 0);
     const labor = (Number(f.laborHours) || 0) * (Number(S.shop.laborRate) || 0);
     return { partsCost, partsSell, labor, total: partsSell + labor };
   }
@@ -713,7 +719,9 @@ td.r, th.r { text-align: right; }
         <label><span class="label">Address</span><input id="s-addr" data-s="address" value="${esc(s.address)}"></label>
         <label><span class="label">Phone</span><input id="s-phone" data-s="phone" value="${esc(s.phone)}"></label>
         <label><span class="label">Labor rate ($/hr)</span><input id="s-rate" data-s="laborRate" type="number" value="${esc(s.laborRate)}"></label>
-        <label><span class="label">Parts markup (%)</span><input id="s-markup" data-s="partsMarkup" type="number" value="${esc(s.partsMarkup)}"></label>
+        <label><span class="label">Parts margin % (cost up to break)</span><input id="s-mlow" data-s="marginLow" type="number" value="${esc(s.marginLow)}"></label>
+        <label><span class="label">Parts margin % (cost above break)</span><input id="s-mhigh" data-s="marginHigh" type="number" value="${esc(s.marginHigh)}"></label>
+        <label><span class="label">Margin break ($ unit cost)</span><input id="s-mbreak" data-s="marginBreak" type="number" value="${esc(s.marginBreak)}"></label>
         <label><span class="label">Sales tax on parts (%)</span><input id="s-tax" data-s="taxRate" type="number" step="0.01" value="${esc(s.taxRate)}"></label>
         <label><span class="label">Shop supplies (% of labor)</span><input id="s-sup" data-s="suppliesPct" type="number" value="${esc(s.suppliesPct)}"></label>
         <label><span class="label">Supplies cap ($)</span><input id="s-cap" data-s="suppliesCap" type="number" value="${esc(s.suppliesCap)}"></label>

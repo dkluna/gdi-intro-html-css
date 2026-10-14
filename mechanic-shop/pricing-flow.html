@@ -1,0 +1,293 @@
+<title>Pricing Assistant Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one vertical job path (a real sequence), each step tagged with who does it; then the pricer's screen and the guardrails. */
+:root {
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --sunk: #e4e8eb;
+  --ink: #1b2329;
+  --muted: #5a6670;
+  --line: #cfd5da;
+  --accent: #d2561c;
+  --accent-soft: #fbe6da;
+  --tech: #1f6f8b;   --tech-soft: #dcEEF4;
+  --pricer: #6a4c93; --pricer-soft: #ece4f6;
+  --ai: #3949ab;     --ai-soft: #e6e9fa;
+  --owner: #8a5a00;  --owner-soft: #fbefd6;
+  --cust: #2f6b3a;   --cust-soft: #dff0e2;
+  --red: #b42318; --yellow: #a15c00; --green: #1f7a45;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171b; --panel: #1b2228; --sunk: #232c33; --ink: #e6ebef; --muted: #98a5ae; --line: #33404a;
+    --accent: #f07a3d; --accent-soft: #3a2216;
+    --tech: #6cc3e0; --tech-soft: #15303a; --pricer: #c3a6ee; --pricer-soft: #2b2140;
+    --ai: #a3afff; --ai-soft: #222846; --owner: #f2bf5e; --owner-soft: #352a12; --cust: #7fd394; --cust-soft: #16301c;
+    --red: #ff8a7d; --yellow: #f5b54a; --green: #6fd39a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171b; --panel: #1b2228; --sunk: #232c33; --ink: #e6ebef; --muted: #98a5ae; --line: #33404a;
+  --accent: #f07a3d; --accent-soft: #3a2216;
+  --tech: #6cc3e0; --tech-soft: #15303a; --pricer: #c3a6ee; --pricer-soft: #2b2140;
+  --ai: #a3afff; --ai-soft: #222846; --owner: #f2bf5e; --owner-soft: #352a12; --cust: #7fd394; --cust-soft: #16301c;
+  --red: #ff8a7d; --yellow: #f5b54a; --green: #6fd39a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1; }
+h2 { font-size: 24px; }
+h3 { font-size: 19px; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 16px; margin-top: 10px; }
+header { border-bottom: 3px solid var(--ink); padding-bottom: 18px; }
+.label { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+
+/* today vs with assistant */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.compare > div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.compare ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.compare .after { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+
+/* role legend */
+.legend { display: flex; flex-wrap: wrap; gap: 8px; }
+.who { display: inline-flex; align-items: center; gap: 6px; font: 600 12px var(--body); padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+.who::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.w-tech { color: var(--tech); background: var(--tech-soft); }
+.w-pricer { color: var(--pricer); background: var(--pricer-soft); }
+.w-ai { color: var(--ai); background: var(--ai-soft); }
+.w-owner { color: var(--owner); background: var(--owner-soft); }
+.w-cust { color: var(--cust); background: var(--cust-soft); }
+
+/* the path */
+.path { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; counter-reset: step; }
+.step { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 16px; position: relative; padding-bottom: 22px; }
+.step::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: 0; width: 2px; background: var(--line); }
+.step:last-child::before { display: none; }
+.num { counter-increment: step; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 700 20px var(--display); background: var(--panel); border: 2px solid var(--ink); }
+.num::after { content: counter(step); }
+.step.ai .num { border-color: var(--ai); color: var(--ai); }
+.step.human .num { border-color: var(--pricer); color: var(--pricer); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.catch { font-size: 13px; color: var(--accent); background: var(--accent-soft); padding: 6px 10px; border-radius: 4px; }
+.catch b { font-weight: 600; }
+.sub { display: grid; gap: 6px; }
+.sub ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+.ask { border: 1px dashed var(--tech); border-radius: 6px; padding: 10px 12px; display: grid; gap: 4px; background: color-mix(in srgb, var(--tech-soft) 55%, var(--panel)); }
+.ask .es { font-weight: 600; }
+.ask .en { color: var(--muted); font-size: 14px; }
+.ask .loop { font-size: 12px; color: var(--tech); font-weight: 600; }
+.marks { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+.mk { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 3px; color: var(--panel); font-weight: 800; font-size: 11px; }
+.mk.r { background: var(--red); } .mk.y { background: var(--yellow); } .mk.g { background: var(--green); }
+.gate { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--pricer); }
+
+/* pricer screen mock */
+.screen { background: var(--panel); border: 2px solid var(--ink); border-radius: 8px; overflow: hidden; }
+.screen-bar { background: var(--ink); color: var(--bg); padding: 8px 14px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font: 500 13px var(--mono); }
+.screen-body { padding: 14px 16px; display: grid; gap: 14px; }
+.flags { border-left: 4px solid var(--owner); background: var(--owner-soft); padding: 8px 12px; border-radius: 0 4px 4px 0; display: grid; gap: 4px; font-size: 14px; }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 6px 8px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+.mono { font-family: var(--mono); font-size: 12px; }
+.fit { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.fit.ok { color: var(--green); } .fit.chk { color: var(--yellow); }
+.group td { background: var(--sunk); font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.example { font-size: 12px; color: var(--muted); }
+
+/* guardrails */
+.rails { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.rails > div { border-top: 3px solid var(--ink); padding-top: 10px; display: grid; gap: 4px; align-content: start; }
+.rails p { color: var(--muted); font-size: 14px; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="label">Repair shop · parts pricing</span>
+    <h1>Pricing Assistant Flow</h1>
+    <p class="lede">How a car goes from the tech's inspection form to a correct, priced parts list in Mitchell 1, with an AI assistant doing the lookups and a person approving every order.</p>
+  </header>
+
+  <section class="compare" aria-label="Today compared with the assistant">
+    <div>
+      <span class="label">Today</span>
+      <h3>The pricer decodes everything by hand</h3>
+      <ul>
+        <li>Reads the paper form, sometimes in Spanish shorthand</li>
+        <li>Works out which version of the part fits from Worldpac's small print</li>
+        <li>Guesses quantities: each, pair, set or box</li>
+        <li>Owner double-checks the work; cars wait days to be priced</li>
+      </ul>
+    </div>
+    <div class="after">
+      <span class="label">With the assistant</span>
+      <h3>The pricer reviews a list that's already right</h3>
+      <ul>
+        <li>Findings are read and translated for them</li>
+        <li>The right variant is picked from the VIN and fitment notes, or one clear question goes to the tech</li>
+        <li>Quantities come from how each part is sold</li>
+        <li>Owner only looks at what's flagged</li>
+      </ul>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:14px" aria-label="Who does what">
+    <h2>One car, start to finish</h2>
+    <div class="legend">
+      <span class="who w-tech">Tech</span>
+      <span class="who w-pricer">Pricer</span>
+      <span class="who w-ai">Assistant</span>
+      <span class="who w-owner">Owner / ops</span>
+      <span class="who w-cust">Customer</span>
+    </div>
+
+    <ol class="path">
+      <li class="step">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Tech inspects and marks the form</h3><span class="who w-tech">Tech</span></div>
+          <p>Same paper form as today, in Spanish or English. <span class="marks"><span class="mk r">✕</span> needs it now <span class="mk y">!</span> soon <span class="mk g">✓</span> OK</span></p>
+          <p class="example">Later: the tech talks to a tablet instead of writing.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Pricer hands it to the assistant</h3><span class="who w-pricer">Pricer</span></div>
+          <p>A phone photo of the form and the Mitchell 1 worksheet, on the office computer where the assistant runs with the shop's own Worldpac login.</p>
+        </div>
+      </li>
+
+      <li class="step ai">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Reads the findings</h3><span class="who w-ai">Assistant</span></div>
+          <p>Translates the shop's Spanish ("balatas", "flecha", "piña"), separates what the customer came in for from the extra red and yellow items, and turns each one into a repair line with side and axle.</p>
+          <div class="catch"><b>Catches:</b> a red or yellow item that never got priced, like a missed alignment.</div>
+        </div>
+      </li>
+
+      <li class="step ai">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Identifies the exact car from the VIN</h3><span class="who w-ai">Assistant</span></div>
+          <p>Checks the VIN for copying errors, decodes year, trim, engine and drive, and trusts the VIN over what was written.</p>
+          <div class="catch"><b>Catches:</b> "2024 Acura TSX" on a worksheet. The TSX ended in 2014, so the VIN decides what the car really is.</div>
+        </div>
+      </li>
+
+      <li class="step ai">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Picks the right version in Worldpac</h3><span class="who w-ai">Assistant</span></div>
+          <p>Reads every option and every fitment note ("only with electronic parking brake", "330 mm rotor", "from 03/2019"). If one option fits, it says why. If two could fit, it asks the tech one question instead of guessing:</p>
+          <div class="ask">
+            <span class="es">“Mide el disco delantero: ¿12.6 o 13.0 pulgadas?”</span>
+            <span class="en">Measure the front rotor: 12.6 or 13.0 inches?</span>
+            <span class="loop">↺ Tech answers or sends a photo, and the assistant finishes the line.</span>
+          </div>
+          <div class="catch"><b>Catches:</b> wrong pads or rotors for the trim level. Brakes are the shop's most common ordering mistake.</div>
+        </div>
+      </li>
+
+      <li class="step ai">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Sets quantities and prices</h3><span class="who w-ai">Assistant</span></div>
+          <div class="sub">
+            <ul>
+              <li><b>Quantity</b> from how the part is sold: pads = 1 axle set, rotors = 2 each, plugs = one per cylinder.</li>
+              <li><b>Price</b> from the shop's margin matrix: 50% margin up to $250 cost, 31% above. A $100 part sells for $200.</li>
+              <li><b>Labor</b> stays with Mitchell. The assistant notes rust or overlap, never invents hours.</li>
+            </ul>
+          </div>
+          <div class="catch"><b>Catches:</b> ordering 10 when 2 were needed.</div>
+        </div>
+      </li>
+
+      <li class="step human">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Pricer reviews, then exports as usual</h3><span class="who w-pricer">Pricer</span></div>
+          <p>The pricer checks the list, selects those exact parts in Worldpac, and uses the existing Export to send them into Mitchell 1. Nothing new to learn in Mitchell.</p>
+          <span class="gate">Person approves · assistant never orders or exports</span>
+        </div>
+      </li>
+
+      <li class="step human">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>Owner checks only the flags, then the customer decides</h3><span class="who w-owner">Owner / ops</span><span class="who w-cust">Customer</span></div>
+          <p>Flagged lines (uncertain fit, odd quantity, high cost, core charges) go to the owner or ops manager. Then the usual call to the customer, line by line.</p>
+        </div>
+      </li>
+
+      <li class="step ai">
+        <span class="num" aria-hidden="true"></span>
+        <div class="card">
+          <div class="card-head"><h3>After approval: find a cheaper source</h3><span class="who w-ai">Assistant</span><span class="who w-pricer">Pricer</span></div>
+          <p>Checks the other vendors for the same quality, a similar warranty and on-time delivery. The customer's price never changes; only the shop's cost does. The pricer or owner places the order.</p>
+          <div class="catch"><b>Example:</b> Worldpac $142 → another vendor $98, saves $44, arrives tomorrow. The owner finds a cheaper source about 30% of the time today.</div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section style="display:grid;gap:12px" aria-label="What the pricer sees">
+    <h2>What the pricer sees</h2>
+    <p class="example">Example output with made-up costs and part numbers, to show the format.</p>
+    <div class="screen">
+      <div class="screen-bar"><span>RO 1042 · 2017 Honda Accord EX 2.4L · VIN check OK</span><span>98,400 mi</span></div>
+      <div class="screen-body">
+        <div class="flags">
+          <span class="label" style="color:var(--owner)">Flags for review</span>
+          <span>Rear pads: <b>needs check</b>, two options depending on parking brake type. Question sent to the tech.</span>
+          <span>Alignment recommended: tie rod end being replaced.</span>
+        </div>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>Line</th><th>Part · brand / part #</th><th>Sold as</th><th class="n">Order</th><th class="n">Unit cost</th><th class="n">Customer</th><th>Fit</th></tr></thead>
+            <tbody>
+              <tr class="group"><td colspan="7">What the customer came in for</td></tr>
+              <tr><td>Front brakes</td><td>Ceramic pad set · <span class="mono">D1654</span></td><td>Axle set</td><td class="n">1</td><td class="n">$48.50</td><td class="n">$97.00</td><td><span class="fit ok">✓ Fit confirmed</span></td></tr>
+              <tr><td>Front brakes</td><td>Rotor 11.1 in · <span class="mono">R-3148</span></td><td>Each</td><td class="n">2</td><td class="n">$62.00</td><td class="n">$124.00 ea</td><td><span class="fit ok">✓ Fit confirmed</span></td></tr>
+              <tr class="group"><td colspan="7">Additional findings · immediate</td></tr>
+              <tr><td>Left tie rod end</td><td>Outer tie rod · <span class="mono">ES80321</span></td><td>Each</td><td class="n">1</td><td class="n">$31.20</td><td class="n">$62.40</td><td><span class="fit ok">✓ Fit confirmed</span></td></tr>
+              <tr><td>Rear brakes</td><td>Pad set · 2 options</td><td>Axle set</td><td class="n">1</td><td class="n">—</td><td class="n">—</td><td><span class="fit chk">? Needs check</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="example">Labor: from Mitchell for each line. Note: pads and rotors on the same axle share labor.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid;gap:14px" aria-label="Guardrails">
+    <h2>Where people stay in control</h2>
+    <div class="rails">
+      <div><h3>No orders</h3><p>The assistant reads and recommends. Ordering, carts and the export to Mitchell stay with the pricer.</p></div>
+      <div><h3>No guessing</h3><p>Unsure fit becomes one specific question to the tech, never the most likely part.</p></div>
+      <div><h3>No made-up numbers</h3><p>Costs come from Worldpac's screen, labor from Mitchell. Missing numbers are marked as missing.</p></div>
+      <div><h3>Flags go up</h3><p>Odd quantities, high-dollar lines and uncertain fits go to the owner or ops manager first.</p></div>
+    </div>
+  </section>
+
+  <footer>Runs on the office computer with the shop's existing Worldpac and Mitchell 1 accounts. The tech tablet app comes later.</footer>
+</div>
