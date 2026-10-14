@@ -1,0 +1,270 @@
+<title>Office Computer Setup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a checklist you work down at the office computer; steps are a real order, each with a tick box that remembers progress on this device. */
+:root {
+  --bg: #eef0f2;
+  --panel: #ffffff;
+  --sunk: #e4e8eb;
+  --ink: #1b2329;
+  --muted: #5a6670;
+  --line: #cfd5da;
+  --accent: #d2561c;
+  --accent-soft: #fbe6da;
+  --ok: #1f7a45; --ok-soft: #dcf2e4;
+  --warn: #8a5a00; --warn-soft: #fbefd6;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171b; --panel: #1b2228; --sunk: #232c33; --ink: #e6ebef; --muted: #98a5ae; --line: #33404a;
+    --accent: #f07a3d; --accent-soft: #3a2216; --ok: #6fd39a; --ok-soft: #15301f; --warn: #f2bf5e; --warn-soft: #352a12;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171b; --panel: #1b2228; --sunk: #232c33; --ink: #e6ebef; --muted: #98a5ae; --line: #33404a;
+  --accent: #f07a3d; --accent-soft: #3a2216; --ok: #6fd39a; --ok-soft: #15301f; --warn: #f2bf5e; --warn-soft: #352a12;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
+.wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 32px; }
+h1, h2, h3 { font-family: var(--display); text-transform: uppercase; letter-spacing: .02em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(30px, 6vw, 44px); line-height: 1; }
+h2 { font-size: 24px; }
+h3 { font-size: 19px; }
+p { margin: 0; max-width: 68ch; }
+ul, ol { margin: 0; padding-left: 20px; display: grid; gap: 5px; }
+header { border-bottom: 3px solid var(--ink); padding-bottom: 18px; display: grid; gap: 10px; }
+.lede { color: var(--muted); font-size: 16px; }
+.label { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+code, .k { font-family: var(--mono); font-size: 13px; background: var(--sunk); padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+.path-ui { font-weight: 600; }
+.progress { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.bar { flex: 1 1 200px; height: 8px; background: var(--sunk); border-radius: 99px; overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; background: var(--ok); transition: width .25s; }
+.count { font: 500 13px var(--mono); color: var(--muted); }
+button { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+button:hover { border-color: var(--ink); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.before { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 10px; }
+.before ul { list-style: none; padding: 0; }
+.before li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; }
+.before li::before { content: "□"; color: var(--muted); }
+
+.steps { list-style: none; padding: 0; display: grid; gap: 14px; counter-reset: s; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 10px; border-left: 5px solid var(--line); }
+.step.done { border-left-color: var(--ok); }
+.step-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.n { counter-increment: s; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--ink); font: 700 18px var(--display); }
+.n::after { content: counter(s); }
+.step.done .n { border-color: var(--ok); color: var(--ok); }
+.tick { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tick input { width: 20px; height: 20px; accent-color: var(--ok); }
+.who { font-size: 13px; color: var(--muted); }
+.note { font-size: 14px; background: var(--warn-soft); color: var(--ink); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 0 4px 4px 0; }
+.good { font-size: 14px; background: var(--ok-soft); border-left: 3px solid var(--ok); padding: 8px 12px; border-radius: 0 4px 4px 0; }
+.prompt { position: relative; background: var(--sunk); border-radius: 6px; padding: 12px 14px; font: 13px/1.55 var(--mono); white-space: pre-wrap; overflow-x: auto; }
+.prompt-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.copied { font-size: 13px; color: var(--ok); }
+
+.trouble { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.trouble div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 600px) { .trouble div { grid-template-columns: minmax(0, 1fr); gap: 4px; } .step-head { grid-template-columns: auto minmax(0, 1fr); } .step-head .tick { grid-column: 1 / -1; } }
+.trouble b { font-weight: 600; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 6px; }
+footer a { color: var(--ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="label">Repair shop · pricing assistant</span>
+    <h1>Office Computer Setup</h1>
+    <p class="lede">Install the pricing assistant on the shop's main computer, about 45 minutes. When you're done, the pricer can hand it a photo of the inspection form and get back a checked parts list from Worldpac.</p>
+    <div class="progress" aria-live="polite">
+      <div class="bar" aria-hidden="true"><span id="barFill"></span></div>
+      <span class="count" id="count">0 of 9 steps done</span>
+      <button type="button" id="reset">Clear ticks</button>
+    </div>
+  </header>
+
+  <section class="before" aria-label="Before you start">
+    <h2>Before you start</h2>
+    <ul>
+      <li><span><b>A Windows 10 or 11 PC (64-bit) or a Mac (macOS 11 or newer).</b> Use the computer the pricer already uses for Worldpac and Mitchell 1. Windows on ARM isn't supported.</span></li>
+      <li><span><b>Google Chrome</b> installed. Claude in Chrome doesn't work in Edge or other browsers.</span></li>
+      <li><span><b>The shop's Worldpac login</b> working in Chrome.</span></li>
+      <li><span><b>A paid Claude plan</b> (Pro, Max or Team). Set it up under a shop email the owner controls, not a personal account.</span></li>
+      <li><span><b>The skill file</b> <code>shop-pricing-assistant.zip</code>, downloaded onto that computer.</span></li>
+      <li><span><b>The owner or ops manager</b> nearby for step 7, since they decide what the assistant may do on its own.</span></li>
+    </ul>
+  </section>
+
+  <section style="display:grid;gap:14px" aria-label="Setup steps">
+    <h2>Steps</h2>
+    <ol class="steps" id="steps">
+
+      <li class="step" data-step="1">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Set up the Claude account</h3><label class="tick"><input type="checkbox" id="t1"> Done</label></div>
+        <ul>
+          <li>Go to <code>claude.ai</code> and sign up with the shop email.</li>
+          <li>Choose a paid plan. <b>Pro</b> is the minimum. <b>Team</b> is best if the owner, ops manager and pricer will all use it, because a skill can be shared across the team.</li>
+        </ul>
+        <div class="note">Claude in Chrome on Pro may offer fewer model choices than Max or Team. Start on Pro if you like, and upgrade if the parts picks aren't accurate enough.</div>
+      </li>
+
+      <li class="step" data-step="2">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Install the Claude desktop app</h3><label class="tick"><input type="checkbox" id="t2"> Done</label></div>
+        <ul>
+          <li>Download it from <code>claude.ai/download</code> and install it.</li>
+          <li>Open it and sign in with the shop account.</li>
+          <li>If it offers a readiness check for Cowork, run it.</li>
+        </ul>
+        <div class="good">Check: the app shows a mode selector with a <span class="path-ui">Cowork</span> tab.</div>
+      </li>
+
+      <li class="step" data-step="3">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Turn on code execution</h3><label class="tick"><input type="checkbox" id="t3"> Done</label></div>
+        <p>Skills need this setting on.</p>
+        <ul>
+          <li><b>Pro or Max:</b> <span class="path-ui">Settings → Capabilities</span> → turn on <span class="path-ui">Code execution and file creation</span>.</li>
+          <li><b>Team:</b> the account owner opens <span class="path-ui">Organization settings → Plugins &amp; skills</span> and makes sure both <span class="path-ui">Code execution and file creation</span> and <span class="path-ui">Skills</span> are on. They're usually on by default.</li>
+        </ul>
+      </li>
+
+      <li class="step" data-step="4">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Upload the pricing skill</h3><label class="tick"><input type="checkbox" id="t4"> Done</label></div>
+        <ol>
+          <li>Go to <span class="path-ui">Customize → Skills</span>.</li>
+          <li>Click <span class="path-ui">+</span>, then <span class="path-ui">+ Create skill</span>, then <span class="path-ui">Upload a skill</span>.</li>
+          <li>Choose <code>shop-pricing-assistant.zip</code>. Don't unzip it first.</li>
+          <li>Make sure the skill is toggled <b>on</b>.</li>
+        </ol>
+        <div class="good">Check: <b>shop-pricing-assistant</b> appears in the skills list.</div>
+      </li>
+
+      <li class="step" data-step="5">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Install Claude in Chrome</h3><label class="tick"><input type="checkbox" id="t5"> Done</label></div>
+        <ol>
+          <li>Open Chrome and search the Chrome Web Store for <b>Claude</b> (published by Anthropic).</li>
+          <li>Click <span class="path-ui">Add to Chrome</span>.</li>
+          <li>Sign in with the <b>same shop account</b>.</li>
+          <li>Pin it: click the puzzle-piece icon, then the pin next to Claude.</li>
+          <li>Approve the permissions it asks for. They're what let Claude read and click pages for you.</li>
+        </ol>
+      </li>
+
+      <li class="step" data-step="6">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Connect Chrome to the desktop app</h3><label class="tick"><input type="checkbox" id="t6"> Done</label></div>
+        <ol>
+          <li>In the desktop app: <span class="path-ui">Settings → Connectors</span>.</li>
+          <li>Find <span class="path-ui">Claude in Chrome</span>, click <span class="path-ui">Configure</span>, and turn it on.</li>
+        </ol>
+        <div class="note">The Chrome connector starts <b>off in every new conversation</b>. When you start pricing a car, turn it on for that conversation (it's in the conversation's tools or connectors menu).</div>
+      </li>
+
+      <li class="step" data-step="7">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Set the safety settings</h3><label class="tick"><input type="checkbox" id="t7"> Done</label></div>
+        <p class="who">Do this with the owner or ops manager.</p>
+        <ul>
+          <li><b>Make it ask first.</b> The Chrome side panel starts in <span class="path-ui">Automatically approve</span>. Switch it to the mode where Claude asks before acting. It keeps that setting afterwards.</li>
+          <li><b>Limit the websites.</b> Only allow the sites it needs: Worldpac, and the free VIN decoder at <code>vpic.nhtsa.dot.gov</code>. On Team, the admin can set an allowlist so it can't go anywhere else.</li>
+          <li><b>Log in to Worldpac yourself</b>, in Chrome as usual. Never type a password into the Claude chat.</li>
+          <li>Keep Mitchell 1 open and handled by the pricer as today. The assistant doesn't touch it.</li>
+        </ul>
+        <div class="note">Claude in Chrome acts on real websites, and Anthropic says it still carries risk. The skill tells it never to order, add to cart or export, but "ask before acting" is the safety net.</div>
+      </li>
+
+      <li class="step" data-step="8">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Run a practice job</h3><label class="tick"><input type="checkbox" id="t8"> Done</label></div>
+        <ol>
+          <li>Pick a car that has <b>already been priced</b>, ideally a brake job.</li>
+          <li>Take phone photos of the tech's inspection form and the Mitchell 1 worksheet, and get them onto the computer.</li>
+          <li>In the desktop app, open <span class="path-ui">Cowork</span>, start a new task, turn on Claude in Chrome for it, attach the photos, and paste this:</li>
+        </ol>
+        <div class="prompt" id="prompt">Use the shop pricing assistant skill.
+Price out this repair order from the attached photos (inspection form and Mitchell worksheet).
+Look up the parts in Worldpac in Chrome, where I'm already logged in.
+Do not add anything to a cart, order, or export. Just give me the parts list in the playbook's format, with flags at the top and any questions for the tech.</div>
+        <div class="prompt-row"><button type="button" id="copy">Copy prompt</button><span class="copied" id="copyMsg" aria-live="polite"></span></div>
+        <ol start="4">
+          <li>Compare its list with what was actually ordered for that car: same parts, same quantities, same prices?</li>
+        </ol>
+        <div class="good">Check: the list matches, or the differences make sense and you've noted them.</div>
+      </li>
+
+      <li class="step" data-step="9">
+        <div class="step-head"><span class="n" aria-hidden="true"></span><h3>Start using it on new cars</h3><label class="tick"><input type="checkbox" id="t9"> Done</label></div>
+        <ul>
+          <li><b>Pricer:</b> photograph the form, run the prompt above, answer or forward any tech questions, then select those parts in Worldpac and use the usual <span class="path-ui">Export</span> to Mitchell 1.</li>
+          <li><b>Owner or ops manager:</b> review every final quote before the customer call, starting with the flags at the top.</li>
+          <li>Keep the Claude app open while it works. Closing it ends the task.</li>
+          <li>When it gets something wrong, write it down. Those notes are how the playbook gets better.</li>
+        </ul>
+      </li>
+    </ol>
+  </section>
+
+  <section style="display:grid;gap:12px" aria-label="If something goes wrong">
+    <h2>If something goes wrong</h2>
+    <div class="trouble">
+      <div><b>The skill won't upload</b><span>Upload the ZIP as-is, without unzipping or renaming it. The folder inside must stay named <code>shop-pricing-assistant</code>. Check that code execution is on (step 3).</span></div>
+      <div><b>No "Upload a skill" option</b><span>On Team, the owner may have turned off member skills. Turn them on in Organization settings.</span></div>
+      <div><b>Claude can't see Chrome</b><span>Turn on the Claude in Chrome connector for this conversation (step 6), and check that Chrome is open and signed in to the same account.</span></div>
+      <div><b>Worldpac asks for a login</b><span>Log in yourself in Chrome, then ask Claude to continue.</span></div>
+      <div><b>Claude can't open a site</b><span>The site isn't on the allowlist. Only add it if the owner agrees.</span></div>
+      <div><b>The task stopped</b><span>The Claude app was closed or the computer went to sleep. Reopen it and start the task again.</span></div>
+      <div><b>It doesn't seem to follow the playbook</b><span>Start the prompt with "Use the shop pricing assistant skill," and check that the skill is toggled on in Customize → Skills.</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Menu names come from Anthropic's help center and may shift slightly as the apps update.</span>
+    <span>Help center: <a href="https://support.claude.com/en/articles/12012173-get-started-with-claude-in-chrome">Claude in Chrome</a> · <a href="https://support.claude.com/en/articles/12512180">Skills</a> · <a href="https://support.claude.com/en/articles/13345190-get-started-with-cowork">Cowork</a></span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const KEY = "office-setup-ticks";
+  const boxes = [...document.querySelectorAll('.step input[type="checkbox"]')];
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch {}
+  const update = () => {
+    let n = 0;
+    boxes.forEach(b => { const done = b.checked; b.closest(".step").classList.toggle("done", done); if (done) n++; });
+    document.getElementById("count").textContent = `${n} of ${boxes.length} steps done`;
+    document.getElementById("barFill").style.width = (n / boxes.length * 100) + "%";
+  };
+  boxes.forEach(b => {
+    b.checked = !!saved[b.id];
+    b.addEventListener("change", () => {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {}
+      update();
+    });
+  });
+  document.getElementById("reset").addEventListener("click", () => {
+    boxes.forEach(b => { b.checked = false; saved[b.id] = false; });
+    try { localStorage.setItem(KEY, "{}"); } catch {}
+    update();
+  });
+  document.getElementById("copy").addEventListener("click", async () => {
+    const txt = document.getElementById("prompt").textContent, msg = document.getElementById("copyMsg");
+    try { await navigator.clipboard.writeText(txt); msg.textContent = "Copied."; }
+    catch {
+      const r = document.createRange(); r.selectNodeContents(document.getElementById("prompt"));
+      const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      msg.textContent = "Selected. Press Ctrl+C to copy.";
+    }
+  });
+  update();
+})();
+</script>
