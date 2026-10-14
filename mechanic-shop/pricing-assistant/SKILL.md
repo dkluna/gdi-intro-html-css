@@ -32,7 +32,7 @@ price_matrix:
       percent: 50
     - cost_above: 250.00
       percent: 31
-  applies_to: unit_cost     # CONFIRM: per unit cost (assumed) or per line total
+  applies_to: unit_cost     # confirmed by the owner: per part (unit cost), not per line total
 
 quote_vendor: Worldpac      # every quote is priced from Worldpac
 
@@ -127,7 +127,7 @@ For each part:
 ## Step 6: Price it
 
 1. **Unit cost** is the Worldpac cost on screen for the chosen variant. Include any core charge as a separate line, and note it.
-2. Pick the tier by unit cost: up to $250 → 50%; above $250 → 31%.
+2. Pick the tier by **each part's unit cost** (confirmed by the owner: per part, not per line total): up to $250 → 50%; above $250 → 31%. Two $150 rotors are each priced at the 50% tier, even though the line totals $300.
 3. Apply the matrix as **margin** (confirmed by the owner): customer unit price = cost ÷ (1 − margin).
    - $100 cost at 50% → **$200.00**
    - $300 cost at 31% → **$434.78**
