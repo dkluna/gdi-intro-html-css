@@ -46,7 +46,7 @@ buy_vendors_in_order:       # used only after the customer approves (Step 9)
   - AutoZone                # CONFIRM final list and order with owner
 
 labor_source: Mitchell 1    # labor hours always come from Mitchell; never estimate
-owner_review_if_line_cost_over: 500.00   # CONFIRM threshold
+final_quote_review: every quote   # for now, the owner or ops manager reviews every final quote before the customer call
 common_jobs: [brakes, fluid changes, radiators, alternators, starters, tune-ups, alignments]
 ```
 
@@ -138,12 +138,12 @@ For each part:
 
 ## Step 7: Red flags for the owner or ops manager
 
-List these at the top of your output so a person sees them first:
+For now, **the owner or ops manager reviews every final quote** before the customer is called. Your flags tell them where to look first. List these at the top of your output:
 
 - Any line still marked **Needs check**
 - A quantity that doesn't match the job (Step 5)
 - A VIN that didn't validate, or a VIN that disagrees with the written vehicle
-- Any line over `owner_review_if_line_cost_over`
+- High-dollar lines, so the reviewer sees the biggest numbers first
 - Out of stock, or a long arrival time
 - Core charges
 - A red or yellow item on the form that has no priced line
@@ -174,6 +174,8 @@ LABOR
 
 QUESTIONS FOR THE TECH (Spanish / English)
 1. ...
+
+READY FOR OWNER / OPS REVIEW: yes / no (no while any line is Needs check)
 
 * Customer price uses the shop's margin matrix (50% up to $250 unit cost, 31% above).
 ```
